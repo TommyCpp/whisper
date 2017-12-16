@@ -1,7 +1,11 @@
-package Whisper
+package main
 
-func main(){
-	message := NewMessage()
-	message.timeFromNow()
+import (
+	"github.com/tommycpp/Whisper/model"
+)
+
+func main() {
+	message := model.NewMessage()
+	message.TimeFromNow()
 
 }
