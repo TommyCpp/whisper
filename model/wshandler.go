@@ -13,10 +13,11 @@ type WsHandler struct {
 	Client        User
 	MsgToSend     chan *Message
 	MsgReceived   chan *Message
-	queryHandlers chan HandlerQuery
-	queryResult   chan QueryResult
+	RedirectQuery chan HandlerQuery
+	Redirect      chan QueryResult
 }
 
+//用于在broadcast中查询接受者的handler,并取出其中的MsgToSend
 type HandlerQuery struct {
 	Receivers []uuid.UUID
 	Source    *WsHandler
@@ -24,7 +25,7 @@ type HandlerQuery struct {
 }
 
 type QueryResult struct {
-	handlerChans []chan *Message
+	handlerChans []chan *Message //对应接受方的MsgToSend channel
 	Msg          *Message
 }
 
@@ -58,12 +59,12 @@ func (wsHandler *WsHandler) handle() {
 		case msgReceived := <-wsHandler.MsgReceived:
 			{
 				receiverIds := msgReceived.ReceiverIds
-				wsHandler.queryHandlers <-
+				wsHandler.RedirectQuery <-
 					HandlerQuery{
 						receiverIds, wsHandler, msgReceived,
 					}
 			}
-		case queryResult := <-wsHandler.queryResult:
+		case queryResult := <-wsHandler.Redirect:
 			{
 				msg := queryResult.Msg
 				for _, handlerChan := range queryResult.handlerChans {
