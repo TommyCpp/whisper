@@ -15,6 +15,7 @@ type WsHandler struct {
 	MsgReceived   chan *Message
 	RedirectQuery chan HandlerQuery
 	Redirect      chan QueryResult
+	Close         chan struct{}
 }
 
 //用于在broadcast中查询接受者的handler,并取出其中的MsgToSend
@@ -37,6 +38,7 @@ func NewWsHandler(conn websocket.Conn, client User, queryHandler chan HandlerQue
 		make(chan *Message),
 		queryHandler,
 		make(chan QueryResult),
+		make(chan struct{}),
 	}
 }
 
@@ -49,6 +51,7 @@ func (wsHandler *WsHandler) redirectMsg(handlerChan chan *Message, message *Mess
 }
 
 func (wsHandler *WsHandler) handle() {
+	defer wsHandler.Conn.Close() // close when function returns
 	for {
 		select {
 		case msgToSend := <-wsHandler.MsgToSend:
@@ -64,12 +67,21 @@ func (wsHandler *WsHandler) handle() {
 						receiverIds, wsHandler, msgReceived,
 					}
 			}
-		case queryResult := <-wsHandler.Redirect:
+		case queryResult := <-wsHandler.Redirect: //转发消息
 			{
 				msg := queryResult.Msg
 				for _, handlerChan := range queryResult.handlerChans {
 					go wsHandler.redirectMsg(handlerChan, msg)
 				}
+			}
+		case _ = <-wsHandler.Close:
+			{
+				close(wsHandler.MsgToSend)
+				close(wsHandler.MsgReceived)
+				close(wsHandler.Redirect)
+				close(wsHandler.RedirectQuery)
+				close(wsHandler.Close)
+				return //close conn
 			}
 		}
 	}
