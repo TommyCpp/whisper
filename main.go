@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"github.com/gorilla/websocket"
-	"github.com/satori/go.uuid"
 )
-/*todo: finish front-end js file*/
 var server = model.Server{
-	UserHandlerMap:      make(map[uuid.UUID]*model.WsHandler),
+	UserHandlerMap:      make(map[string]*model.WsHandler),
 	QueryRedirectTarget: make(chan model.HandlerQuery),
 	CreateHandler:       make(chan *model.WsHandler),
 	CloseHandler:        make(chan *model.WsHandler),
@@ -17,14 +15,13 @@ var server = model.Server{
 
 func main() {
 	start(&server)
-
 }
 
 func start(server *model.Server) {
 	fmt.Println("Start processing....")
 	go server.Handle()
 	http.HandleFunc("/", handler)
-	http.ListenAndServe(":8086", nil)
+	http.ListenAndServe("localhost:8086", nil)
 
 }
 
@@ -34,6 +31,7 @@ func handler(res http.ResponseWriter, req *http.Request) {
 		http.NotFound(res, req)
 		return
 	}
-	wsHandler := model.NewWsHandler(*conn, *model.NewUser(conn), make(chan model.HandlerQuery))
+	fmt.Println("Open an WebSocket channel")
+	wsHandler := model.NewWsHandler(*conn, *model.NewUser(conn))
 	server.CreateHandler <- wsHandler
 }

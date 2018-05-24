@@ -1,20 +1,22 @@
 package model
 
 import (
-	"github.com/satori/go.uuid"
 	"net"
 	"github.com/gorilla/websocket"
 )
 
+var maxId = 0
+
 type User struct {
-	Id       uuid.UUID `json:"id"`
-	Username string    `json:"username"`
+	Id       int    `json:"id"`
+	Username string `json:"username"`
 	Addr     net.Addr
 }
 
 func NewUser(conn *websocket.Conn) *User {
+	maxId += 1
 	return &User{
-		uuid.NewV4(),
+		maxId,
 		conn.LocalAddr().String(),
 		conn.LocalAddr()}
 }
