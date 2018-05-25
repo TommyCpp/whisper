@@ -51,7 +51,7 @@ func (wsHandler *WsHandler) redirectMsg(handlerChan chan *Message, message *Mess
 }
 
 func (wsHandler *WsHandler) handle() {
-	defer wsHandler.close() // close when function returns
+	go wsHandler.read() // 启动Read线程
 	for {
 		select {
 		case msgToSend := <-wsHandler.MsgToSend:
@@ -80,31 +80,26 @@ func (wsHandler *WsHandler) handle() {
 			}
 		case _ = <-wsHandler.Close:
 			{
-				wsHandler.close()
+				return
 			}
 		}
 	}
 }
 
 func (wsHandler *WsHandler) read() {
-	defer wsHandler.close()
 	for {
 		var message Message
 		err := wsHandler.Conn.ReadJSON(&message)
 		if err != nil {
 			fmt.Println("read:", err)
 			wsHandler.close()
+			return
 		}
 		wsHandler.MsgReceived <- &message
-
 	}
 }
 
 func (wsHandler *WsHandler) close() {
-	defer wsHandler.Conn.Close()
-	close(wsHandler.MsgToSend)
-	close(wsHandler.MsgReceived)
-	close(wsHandler.Redirect)
-	close(wsHandler.Close)
+	wsHandler.Close <- struct{}{}
 	wsHandler.Server.CloseHandler <- wsHandler
 }

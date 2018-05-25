@@ -62,8 +62,8 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" onClick="send()">Send</button>
-                <button type="submit" class="btn btn-primary" onClick="close()">Close</button>
+                <button type="submit" class="btn btn-primary" onclick="send()">Send</button>
+                <button type="button" class="btn btn-primary" onclick="closeConn()">Close</button>
             </div>
 
         </div>
@@ -110,8 +110,6 @@
         if (userName.value === "") {
             userName.value = "0"
         }
-        var time = new Date();
-        var currenTimeStamp = time.toLocaleString('en-US', {hour: 'numeric', minute: 'numeric', hour12: true});
         var messageDetails = {
             sender: userName.value,
             content: message.value,
@@ -121,8 +119,9 @@
         message.value = "";
     }
 
-    function close(){
-        socket.close();
+    function closeConn(){
+        socket.close(1000);
+        connectionStatus.innerHTML = "Status: Not Connected\n";
     }
 </script>
 </body>
