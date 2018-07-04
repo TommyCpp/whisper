@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"github.com/gorilla/websocket"
+	"encoding/json"
 )
+
 var server = model.Server{
 	UserHandlerMap:      make(map[string]*model.WsHandler),
 	QueryRedirectTarget: make(chan model.HandlerQuery),
@@ -20,6 +22,7 @@ func main() {
 func start(server *model.Server) {
 	fmt.Println("Start processing....")
 	go server.Handle()
+	http.HandleFunc("/login", loginHandler)
 	http.HandleFunc("/", handler)
 	http.ListenAndServe("localhost:8086", nil)
 
@@ -34,4 +37,24 @@ func handler(res http.ResponseWriter, req *http.Request) {
 	fmt.Println("Open an WebSocket channel")
 	wsHandler := model.NewWsHandler(*conn, *model.NewUser(conn))
 	server.CreateHandler <- wsHandler
+}
+
+func loginHandler(res http.ResponseWriter, req *http.Request) {
+	//todo: 测试
+	var account model.Account
+	err := json.NewDecoder(req.Body).Decode(&account) // read User
+	if err != nil {
+		http.Error(res, "Cannot authentication", http.StatusUnauthorized)
+		return
+	}
+	fmt.Println("User " + account.Username + " has logged in")
+	json.NewEncoder(res).Encode(struct {
+		Token []byte `json:"token"`
+	}{generateToken(account.Username)})
+	return
+}
+
+func generateToken(username string) []byte {
+	//todo: Token生成算法
+	return []byte(username)
 }
