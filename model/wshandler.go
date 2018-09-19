@@ -42,6 +42,7 @@ func NewWsHandler(conn websocket.Conn, client User) *WsHandler {
 		make(chan struct{}),
 		nil,
 		make([]middleware.Middleware, 2), //todo: configure the size of middleware via config file.
+
 	}
 }
 
