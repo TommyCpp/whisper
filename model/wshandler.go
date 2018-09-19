@@ -1,8 +1,9 @@
 package model
 
 import (
-	"github.com/gorilla/websocket"
 	"fmt"
+	"github.com/gorilla/websocket"
+	"github.com/tommycpp/Whisper/middleware"
 )
 
 /*
@@ -16,6 +17,7 @@ type WsHandler struct {
 	Redirect    chan QueryResult
 	Close       chan struct{}
 	Server      *Server
+	Middlewares []middleware.Middleware
 }
 
 //用于在broadcast中查询接受者的handler,并取出其中的MsgToSend
@@ -39,6 +41,7 @@ func NewWsHandler(conn websocket.Conn, client User) *WsHandler {
 		make(chan QueryResult),
 		make(chan struct{}),
 		nil,
+		make([]middleware.Middleware, 2), //todo: configure the size of middleware via config file.
 	}
 }
 
@@ -51,7 +54,7 @@ func (wsHandler *WsHandler) redirectMsg(handlerChan chan *Message, message *Mess
 }
 
 func (wsHandler *WsHandler) handle() {
-	go wsHandler.read() // 启动Read线程
+	go wsHandler.read() // start read process
 	for {
 		select {
 		case msgToSend := <-wsHandler.MsgToSend:
@@ -65,10 +68,9 @@ func (wsHandler *WsHandler) handle() {
 		case msgReceived := <-wsHandler.MsgReceived:
 			{
 				receiverIds := msgReceived.ReceiverIds
-				wsHandler.Server.QueryRedirectTarget <-
-					HandlerQuery{
-						receiverIds, wsHandler, msgReceived,
-					}
+				wsHandler.Server.QueryRedirectTarget <- HandlerQuery{
+					receiverIds, wsHandler, msgReceived,
+				}
 				//传入Server的QueryRedirectTarget channel
 			}
 		case queryResult := <-wsHandler.Redirect: //转发消息
