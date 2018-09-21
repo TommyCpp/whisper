@@ -1,5 +1,3 @@
 {
-  "middleware":{
-    "initialNumber":2
-  }
+  "middlewareSize":6
 }
