@@ -1,11 +1,14 @@
 package main
 
 import (
-	"github.com/tommycpp/Whisper/model"
-	"fmt"
-	"net/http"
-	"github.com/gorilla/websocket"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"github.com/gorilla/websocket"
+	"github.com/tommycpp/Whisper/config"
+	"github.com/tommycpp/Whisper/model"
+	"net/http"
 )
 
 var server = model.Server{
@@ -15,16 +18,24 @@ var server = model.Server{
 	CloseHandler:        make(chan *model.WsHandler),
 }
 
+var configuration = config.NewConfiguration()
+
 func main() {
 	start(&server)
 }
 
 func start(server *model.Server) {
-	fmt.Println("Start processing....")
-	go server.Handle()
-	http.HandleFunc("/login", loginHandler)
-	http.HandleFunc("/", handler)
-	http.ListenAndServe("localhost:8086", nil)
+	err := config.ReadConfig("./config/config.json", configuration)
+	if err == nil {
+		fmt.Println("Start processing....")
+		go server.Handle()
+		http.HandleFunc("/login", loginHandler)
+		http.HandleFunc("/", handler)
+		http.ListenAndServe("localhost:8086", nil)
+	} else {
+		fmt.Println("Cannot read config file.")
+		fmt.Println(err)
+	}
 
 }
 
@@ -35,7 +46,7 @@ func handler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	fmt.Println("Open an WebSocket channel")
-	wsHandler := model.NewWsHandler(*conn, *model.NewUser(conn))
+	wsHandler := model.NewWsHandler(*conn, *model.NewUser(conn), configuration)
 	server.CreateHandler <- wsHandler
 }
 
@@ -55,6 +66,7 @@ func loginHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func generateToken(username string) []byte {
-	//todo: Token生成算法
-	return []byte(username)
+	hasher := md5.New()
+	hasher.Write([]byte(username))
+	return []byte(hex.EncodeToString(hasher.Sum(nil)))
 }

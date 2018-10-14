@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/tommycpp/Whisper/config"
 	"github.com/tommycpp/Whisper/middleware"
 )
 
@@ -32,7 +33,7 @@ type QueryResult struct {
 	Msg          *Message
 }
 
-func NewWsHandler(conn websocket.Conn, client User) *WsHandler {
+func NewWsHandler(conn websocket.Conn, client User, configuration *config.Configuration) *WsHandler {
 	return &WsHandler{
 		conn,
 		client,
@@ -41,8 +42,7 @@ func NewWsHandler(conn websocket.Conn, client User) *WsHandler {
 		make(chan QueryResult),
 		make(chan struct{}),
 		nil,
-		make([]middleware.Middleware, 2), //todo: configure the size of middleware via config file.
-
+		make([]middleware.Middleware, configuration.MiddlewareSize),
 	}
 }
 
