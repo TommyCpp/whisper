@@ -1,27 +1,75 @@
 package model
 
+import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/pem"
+	"log"
+)
+
 type RSACipher struct {
-	KeyPair KeyPair
+	KeyPair             *KeyPair
+	PublicKeyFromClient *rsa.PublicKey
 }
 
-func (cipher *RSACipher) getKeyPair() KeyPair {
-	panic("implement me")
+func (cipher *RSACipher) getServerKeyPair() *KeyPair {
+	return cipher.KeyPair
 }
 
-func (cipher *RSACipher) encryption(str string) {
-
+func (cipher *RSACipher) getPublicKeyFromClient() *rsa.PublicKey {
+	return cipher.PublicKeyFromClient
 }
 
-func (cipher *RSACipher) decryption(str string) {
-
-}
-
-func NewCipher() *RSACipher {
-	return &RSACipher{
-		KeyPair: generateKeys(),
+func (cipher *RSACipher) encrypt(str []byte) []byte {
+	res, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, cipher.PublicKeyFromClient, str, nil)
+	if err != nil {
+		panic("Error when encrypt")
+	} else {
+		return res
 	}
 }
 
-func generateKeys() KeyPair {
+func (cipher *RSACipher) decrypt(str []byte) []byte {
+	res, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, cipher.KeyPair.PrivateKey, str, nil)
+	if err != nil {
+		log.Fatal("fail to decrypt")
+	}
+	return res
+}
+
+func NewRSACipher(publicKeyFromClient []byte) *RSACipher {
+	block, _ := pem.Decode(publicKeyFromClient)
+	if block == nil || block.Type != "PUBLIC KEY" {
+		log.Fatal("failed to decode PEM block containing public key")
+	}
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var rsaPublicKey *rsa.PublicKey
+	rsaPublicKey, right := pub.(*rsa.PublicKey)
+	if !right {
+		log.Fatal("Not RSA public key")
+	}
+	return &RSACipher{
+		KeyPair:             generateKeys(),
+		PublicKeyFromClient: rsaPublicKey,
+	}
+}
+
+func generateKeys() *KeyPair {
+	reader := rand.Reader
+	bitSize := 1024
+
+	key, err := rsa.GenerateKey(reader, bitSize)
+	if err != nil {
+		panic("Error when generate key")
+	}
+	return &KeyPair{
+		PrivateKey: key,
+		PublicKey:  &key.PublicKey,
+	}
 
 }

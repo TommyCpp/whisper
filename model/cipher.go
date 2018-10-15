@@ -1,12 +1,15 @@
 package model
 
+import "crypto/rsa"
+
 type Cipher interface {
-	getKeyPair() KeyPair
-	encryption(str string)
-	decryption(str string)
+	getServerKeyPair() KeyPair
+	getPublicKeyFromClient() []byte
+	encrypt(str []byte) []byte
+	decrypt(str []byte) []byte
 }
 
 type KeyPair struct {
-	PublicKey  []byte
-	PrivateKey []byte
+	PublicKey  *rsa.PublicKey
+	PrivateKey *rsa.PrivateKey
 }
