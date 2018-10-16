@@ -2,18 +2,33 @@ package config
 
 import (
 	"encoding/json"
+	"github.com/tommycpp/Whisper/model"
 	"os"
 )
 
+var Config *Configuration
+
 type Configuration struct {
-	Port           int `json:"port"`
-	MiddlewareSize int `json:"middlewareSize"`
+	model.Singleton
+	Port              int    `json:"port"`
+	MiddlewareSize    int    `json:"middlewareSize"`
+	DatabaseDriveName string `json:"database.drive"`
+	DatabaseURLName   string `json:"database.url"`
+}
+
+func (c *Configuration) Init() {
+	c.Port = 8086
+	c.MiddlewareSize = 2
+	c.DatabaseDriveName = "mysql"
+	c.DatabaseURLName = "whisper:123456@127.0.0.1:3306/whisper"
 }
 
 func NewConfiguration() *Configuration {
 	return &Configuration{
-		Port:           8086,
-		MiddlewareSize: 2,
+		Port:              8086,
+		MiddlewareSize:    2,
+		DatabaseDriveName: "mysql",
+		DatabaseURLName:   "whisper:123456@127.0.0.1:3306/whisper",
 	}
 }
 
@@ -31,7 +46,9 @@ func ReadConfig(filename string, configuration *Configuration) error {
 }
 
 //func main() {
-//	configuration := NewConfiguration()
+//	configuration := new(Configuration)
+//	configuration.Init()
+//
 //	ReadConfig("./config.json", configuration)
 //	fmt.Print(configuration.MiddlewareSize)
 //}

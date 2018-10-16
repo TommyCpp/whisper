@@ -5,7 +5,6 @@ import (
 	"strconv"
 )
 
-//todo: 测试
 type Server struct {
 	UserHandlerMap      map[string]*WsHandler
 	QueryRedirectTarget chan HandlerQuery

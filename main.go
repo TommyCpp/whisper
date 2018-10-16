@@ -18,7 +18,7 @@ var server = model.Server{
 	CloseHandler:        make(chan *model.WsHandler),
 }
 
-var configuration = config.NewConfiguration()
+var configuration = config.Config
 
 func main() {
 	start(&server)
@@ -26,6 +26,8 @@ func main() {
 
 func start(server *model.Server) {
 	err := config.ReadConfig("./config/config.json", configuration)
+	sql := GetSqlConnection() //get database connection
+	defer sql.Close()         //close database connection
 	if err == nil {
 		fmt.Println("Start processing....")
 		go server.Handle()
