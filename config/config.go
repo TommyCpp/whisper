@@ -2,14 +2,13 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/tommycpp/Whisper/model"
 	"os"
 )
 
 var Config *Configuration
 
 type Configuration struct {
-	model.Singleton
+	//model.Singleton
 	Port              int    `json:"port"`
 	MiddlewareSize    int    `json:"middlewareSize"`
 	DatabaseDriveName string `json:"database.drive"`

@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/tommycpp/Whisper/config"
 	"github.com/tommycpp/Whisper/model"
+	"github.com/tommycpp/Whisper/sqlconnection"
 	"net/http"
 )
 
@@ -19,6 +20,7 @@ var server = model.Server{
 }
 
 var configuration = config.Config
+var db *sqlconnection.SqlConnection
 
 func main() {
 	start(&server)
@@ -26,8 +28,8 @@ func main() {
 
 func start(server *model.Server) {
 	err := config.ReadConfig("./config/config.json", configuration)
-	sql := GetSqlConnection() //get database connection
-	defer sql.Close()         //close database connection
+	db := sqlconnection.GetSqlConnection() //get database connection
+	defer db.Close()                       //close database connection
 	if err == nil {
 		fmt.Println("Start processing....")
 		go server.Handle()
@@ -52,8 +54,18 @@ func handler(res http.ResponseWriter, req *http.Request) {
 	server.CreateHandler <- wsHandler
 }
 
-func loginHandler(res http.ResponseWriter, req *http.Request) {
+func registerHandler(res http.ResponseWriter, req *http.Request) {
+	var account model.Account
+	err := json.NewDecoder(req.Body).Decode(&account)
+	if err != nil {
+		http.Error(res, "Cannot create user", http.StatusBadRequest)
+	}
+	fmt.Println("Creating " + account.Username)
+	account.StoreIntoDB(db)
 	//todo: 测试
+}
+
+func loginHandler(res http.ResponseWriter, req *http.Request) {
 	var account model.Account
 	err := json.NewDecoder(req.Body).Decode(&account) // read User
 	if err != nil {

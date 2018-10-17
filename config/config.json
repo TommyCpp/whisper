@@ -3,6 +3,6 @@
   "encryptionKey": "ljsidf80P(SDPF(:O9djfdsfj;9JFS;(DfLO*FDsld",
   "Database": {
     "drive": "mysql",
-    "url": "whisper:123456@127.0.0.1:3306/whisper"
+    "url": "whisperAdmin:123456@127.0.0.1:3306/whisper"
   }
 }
