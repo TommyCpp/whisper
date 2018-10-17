@@ -9,6 +9,6 @@ func TestReadConfig(t *testing.T) {
 	configuration := NewConfiguration()
 	ReadConfig("./mock_config.json", configuration)
 
-	assert.Equal(t, 5, configuration.MiddlewareSize)
+	assert.Equal(t, 6, configuration.MiddlewareSize)
 
 }

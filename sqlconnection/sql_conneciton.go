@@ -2,6 +2,7 @@ package sqlconnection
 
 import (
 	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/tommycpp/Whisper/config"
 	"log"
 )
@@ -22,15 +23,20 @@ func NewConnection(db *sql.DB) *SqlConnection {
 	}
 }
 
-func GetSqlConnection() *SqlConnection {
+func GetSqlConnection(configuration *config.Configuration) *SqlConnection {
 	if sqlConnection != nil {
 		return sqlConnection // fixme: not thread-safe
 	} else {
-		db, err := sql.Open(config.Config.DatabaseDriveName, config.Config.DatabaseDriveName)
+		db, err := sql.Open(configuration.DatabaseDriveName, configuration.DatabaseURLName)
 		if err != nil || db == nil {
 			log.Fatal("Error when open DB")
 			return nil
 		} else {
+			if err := db.Ping(); err != nil {
+				log.Fatal(err)
+				log.Fatal("Error when connecting to DB")
+				return nil
+			}
 			sqlConnection = &SqlConnection{
 				db: db,
 			}

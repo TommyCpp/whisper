@@ -12,13 +12,14 @@ type Account struct {
 	Password string `json:"password"`
 }
 
-func (a *Account) StoreIntoDB(db *sqlconnection.SqlConnection) sql.Result {
+func (a *Account) StoreIntoDB(db *sqlconnection.SqlConnection) (sql.Result, error) {
 	res, err := db.Exec("INSERT INTO user(`id`,username,`password`) VALUES (?,?,?)", a.Id, a.Username, a.Password)
 	if err != nil {
-		log.Fatal(err)
-		log.Fatal("Cannot create user")
+		log.Print("Cannot create user")
+		log.Print(err)
+		return nil, err
 	}
-	return res
+	return res, nil
 }
 
 func (a *Account) CheckIfValid(db *sqlconnection.SqlConnection) bool {

@@ -19,7 +19,7 @@ func (c *Configuration) Init() {
 	c.Port = 8086
 	c.MiddlewareSize = 2
 	c.DatabaseDriveName = "mysql"
-	c.DatabaseURLName = "whisper:123456@127.0.0.1:3306/whisper"
+	c.DatabaseURLName = "whisperAdmin:123456@tcp(127.0.0.1:3306)/whisper"
 }
 
 func NewConfiguration() *Configuration {
@@ -27,7 +27,7 @@ func NewConfiguration() *Configuration {
 		Port:              8086,
 		MiddlewareSize:    2,
 		DatabaseDriveName: "mysql",
-		DatabaseURLName:   "whisper:123456@127.0.0.1:3306/whisper",
+		DatabaseURLName:   "whisperAdmin:123456@tcp(127.0.0.1:3306)/whisper",
 	}
 }
 
