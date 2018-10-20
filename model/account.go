@@ -22,17 +22,16 @@ func (a *Account) StoreIntoDB(db *sqlconnection.SqlConnection) (sql.Result, erro
 	return res, nil
 }
 
-func (a *Account) CheckIfValid(db *sqlconnection.SqlConnection) bool {
+func (a *Account) CheckIfValid(db *sqlconnection.SqlConnection) (bool, error) {
 	res, err := db.Query("SELECT * FROM user WHERE username=? AND password=?", a.Username, a.Password)
 	defer res.Close()
 	if err != nil {
-		log.Fatal(err)
-		log.Fatal("Error when connect to DB")
+		log.Print("Error when connect to DB")
+		return false, err
 	}
 	if res.Next() {
-		return true
+		return true, nil
 	} else {
-		log.Fatal(res)
-		return false
+		return false, nil
 	}
 }

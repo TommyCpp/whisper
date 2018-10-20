@@ -26,7 +26,7 @@ var server = model.Server{
 
 var configuration = config.NewConfiguration()
 var db *sqlconnection.SqlConnection
-var user_index uint32
+var userIndex uint32
 
 func main() {
 	start(&server)
@@ -39,7 +39,6 @@ func start(server *model.Server) {
 		os.Exit(1)
 	}
 	db = sqlconnection.GetSqlConnection(configuration) //get database connection
-	//defer db.Close()                       //close database connection
 	//get next user id
 	rows, err := db.Query("SELECT MAX(Id) FROM user")
 	defer rows.Close()
@@ -48,10 +47,10 @@ func start(server *model.Server) {
 		log.Fatal(err)
 	} else {
 		for rows.Next() {
-			if err := rows.Scan(&user_index); err != nil {
+			if err := rows.Scan(&userIndex); err != nil {
 				if strings.Contains(err.Error(), `Scan error on column index 0`) {
 					//if the database is empty
-					user_index = 0
+					userIndex = 0
 				} else {
 					log.Fatal(err)
 				}
@@ -68,7 +67,14 @@ func start(server *model.Server) {
 			registerHandler(writer, request)
 		}
 	})
-	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
+		switch request.Method {
+		case "GET":
+			http.ServeFile(writer, request, "./frontend/login.html")
+		case "POST":
+			loginHandler(writer, request)
+		}
+	})
 	http.HandleFunc("/", handler)
 	http.ListenAndServe("localhost:8086", nil)
 }
@@ -87,7 +93,7 @@ func handler(res http.ResponseWriter, req *http.Request) {
 func registerHandler(res http.ResponseWriter, req *http.Request) {
 	var account model.Account
 	err := json.NewDecoder(req.Body).Decode(&account)
-	account.Id = int(atomic.AddUint32(&user_index, 1)) // get next id
+	account.Id = int(atomic.AddUint32(&userIndex, 1)) // get next id
 	if err != nil {
 		http.Error(res, "Cannot create user", http.StatusBadRequest)
 	}
@@ -95,6 +101,7 @@ func registerHandler(res http.ResponseWriter, req *http.Request) {
 	storeResult, err := account.StoreIntoDB(db)
 	if err != nil {
 		if err.(*mysql.MySQLError).Number == 1062 {
+			// when there is a duplicated ID or duplicated username
 			http.Error(res, "Username has already been taken", http.StatusBadRequest)
 		} else {
 			http.Error(res, "Error when inserting into DB", http.StatusBadRequest)
@@ -118,10 +125,13 @@ func loginHandler(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Cannot authentication", http.StatusUnauthorized)
 		return
 	}
-	fmt.Println("User " + account.Username + " has logged in")
-	json.NewEncoder(res).Encode(struct {
-		Token []byte `json:"token"`
-	}{generateToken(account.Username)})
+	if ifValid, err := account.CheckIfValid(db); err == nil && ifValid {
+		json.NewEncoder(res).Encode(struct {
+			Token []byte `json:"token"`
+		}{generateToken(account.Username)})
+		fmt.Println("User " + account.Username + " has logged in")
+	}
+
 	return
 }
 
