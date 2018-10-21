@@ -96,6 +96,7 @@ func registerHandler(res http.ResponseWriter, req *http.Request) {
 	account.Id = int(atomic.AddUint32(&userIndex, 1)) // get next id
 	if err != nil {
 		http.Error(res, "Cannot create user", http.StatusBadRequest)
+		return
 	}
 	fmt.Println("Creating " + account.Username)
 	storeResult, err := account.StoreIntoDB(db)
@@ -130,6 +131,9 @@ func loginHandler(res http.ResponseWriter, req *http.Request) {
 			Token []byte `json:"token"`
 		}{generateToken(account.Username)})
 		fmt.Println("User " + account.Username + " has logged in")
+	} else {
+		res.WriteHeader(401)
+		res.Write([]byte("Cannot authorized"))
 	}
 
 	return
