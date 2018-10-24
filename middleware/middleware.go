@@ -6,9 +6,9 @@ type Middleware interface {
 }
 
 type ReadMiddleware interface {
-	afterRead(msg string)
+	AfterRead(msg string) string
 }
 
 type WriteMiddleware interface {
-	beforeWrite(msg string)
+	BeforeWrite(msg string) string
 }

@@ -3,10 +3,8 @@ package model
 import "crypto/rsa"
 
 type Cipher interface {
-	getServerKeyPair() KeyPair
-	getPublicKeyFromClient() []byte
-	encrypt(str []byte) []byte
-	decrypt(str []byte) []byte
+	Encrypt(str []byte) []byte
+	Decrypt(str []byte) []byte
 }
 
 type KeyPair struct {

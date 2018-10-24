@@ -50,12 +50,12 @@ zwoZpr2YYqCstmC2n65z1LUyrIDIEQEoIjwZMUD6Gl377zRdhNFfnVNSQvI3+jOz
 
 	cipher := NewRSACipher([]byte(clientPub))
 
-	encryptedMessage := cipher.encrypt([]byte("Classification words"))
+	encryptedMessage := cipher.Encrypt([]byte("Classification words"))
 	fmt.Println(encryptedMessage)
 
 	wordsFromClient, _ := rsa.EncryptOAEP(sha256.New(), rand.Reader, cipher.KeyPair.PublicKey, []byte("Classification from client"), nil)
 
-	decryptedMessage := cipher.decrypt(wordsFromClient)
+	decryptedMessage := cipher.Decrypt(wordsFromClient)
 
 	assert.Equal(t, "Classification from client", string(decryptedMessage))
 }

@@ -22,19 +22,19 @@ func (cipher *RSACipher) getPublicKeyFromClient() *rsa.PublicKey {
 	return cipher.PublicKeyFromClient
 }
 
-func (cipher *RSACipher) encrypt(str []byte) []byte {
+func (cipher *RSACipher) Encrypt(str []byte) []byte {
 	res, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, cipher.PublicKeyFromClient, str, nil)
 	if err != nil {
-		panic("Error when encrypt")
+		panic("Error when Encrypt")
 	} else {
 		return res
 	}
 }
 
-func (cipher *RSACipher) decrypt(str []byte) []byte {
+func (cipher *RSACipher) Decrypt(str []byte) []byte {
 	res, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, cipher.KeyPair.PrivateKey, str, nil)
 	if err != nil {
-		log.Fatal("fail to decrypt")
+		log.Fatal("fail to Decrypt")
 	}
 	return res
 }
