@@ -61,6 +61,14 @@
                     </div>
                 </div>
 
+                <div class="form-group row">
+                    <label for="encryption-config">Encryption Method</label>
+                    <select name="encryption-config" id="encryption-config">
+                        <option value="NO" selected>NO Encryption</option>
+                        <option value="RSA">RSA Encryption</option>
+                    </select>
+                </div>
+
                 <button type="submit" class="btn btn-primary" onclick="send()">Send</button>
                 <button type="button" class="btn btn-primary" onclick="closeConn()">Close</button>
             </div>
@@ -78,7 +86,7 @@
     var output = document.getElementById("output");
     var hostName = location.hostname;
     var socket;
-    socket = new WebSocket("ws://localhost:8086/");
+    socket = new WebSocket("ws://localhost:8086/message");
     socket.onopen = function () {
         connectionStatus.innerHTML = "Status: Connected\n";
     };

@@ -8,6 +8,7 @@ import (
 type Server struct {
 	UserHandlerMap      map[string]*WsHandler
 	QueryRedirectTarget chan HandlerQuery
+	ConfigHandler       chan *IdAndHandlerConfig
 	CreateHandler       chan *WsHandler
 	CloseHandler        chan *WsHandler
 }
@@ -43,6 +44,15 @@ func (server *Server) Handle() {
 				close(handler.MsgReceived)
 				close(handler.Redirect)
 				close(handler.Close)
+			}
+		case idAndConfig := <-server.ConfigHandler:
+			{
+				id := idAndConfig.Id
+				config := idAndConfig.Config
+				if handler, ok := server.UserHandlerMap[id]; ok {
+					handler.ConfigHandler <- config
+				}
+
 			}
 
 		}

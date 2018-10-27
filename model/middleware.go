@@ -1,4 +1,4 @@
-package middleware
+package model
 
 type Middleware interface {
 	ReadMiddleware
@@ -6,9 +6,9 @@ type Middleware interface {
 }
 
 type ReadMiddleware interface {
-	AfterRead(msg string) string
+	AfterRead(msg *Message) error
 }
 
 type WriteMiddleware interface {
-	BeforeWrite(msg string) string
+	BeforeWrite(msg *Message) error
 }

@@ -4,21 +4,21 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/tommycpp/Whisper/config"
-	"github.com/tommycpp/Whisper/middleware"
 )
 
 /*
 WsHandler 负责一个客户端的收发工作，Server将保存一个map，将每一个User映射到一个WsHandler，如果需要向别的User发送单播消息，则在这个map中找到对应的WsHandler,使用send方法发送
 */
 type WsHandler struct {
-	Conn        websocket.Conn
-	Client      User
-	MsgToSend   chan *Message
-	MsgReceived chan *Message
-	Redirect    chan QueryResult
-	Close       chan struct{}
-	Server      *Server
-	Middlewares []middleware.Middleware
+	Conn          websocket.Conn
+	Client        User
+	MsgToSend     chan *Message
+	MsgReceived   chan *Message
+	Redirect      chan QueryResult
+	Close         chan struct{}
+	Server        *Server
+	Middlewares   []Middleware
+	ConfigHandler chan *HandlerConfig
 }
 
 //用于在broadcast中查询接受者的handler,并取出其中的MsgToSend
@@ -42,11 +42,21 @@ func NewWsHandler(conn websocket.Conn, client User, configuration *config.Config
 		make(chan QueryResult),
 		make(chan struct{}),
 		nil,
-		make([]middleware.Middleware, configuration.MiddlewareSize),
+		make([]Middleware, configuration.MiddlewareSize),
+		make(chan *HandlerConfig),
 	}
 }
 
+func (wsHandler *WsHandler) addMiddleware(middleware Middleware) {
+	wsHandler.Middlewares = append(wsHandler.Middlewares, middleware) //fixme: not thread safe
+}
+
 func (wsHandler *WsHandler) sendMsg(msg *Message) {
+	//process by middle
+	for _, mid := range wsHandler.Middlewares {
+		if err := mid.BeforeWrite(msg); err != nil {
+		}
+	}
 	wsHandler.MsgToSend <- msg
 }
 
@@ -65,7 +75,7 @@ func (wsHandler *WsHandler) handle() {
 					Sender  string
 				}{(msgToSend).Content, (msgToSend).SenderId})
 			}
-			//	togo: add more handler func
+			//	todo: add more handler func
 		case msgReceived := <-wsHandler.MsgReceived:
 			{
 				receiverIds := msgReceived.ReceiverIds
@@ -85,7 +95,17 @@ func (wsHandler *WsHandler) handle() {
 			{
 				return
 			}
+		case handlerConfig := <-wsHandler.ConfigHandler:
+			{
+				switch handlerConfig.Op {
+				case "ADD":
+					{
+						wsHandler.addMiddleware(handlerConfig.MiddleWare)
+					}
+				}
+			}
 		}
+
 	}
 }
 
@@ -98,6 +118,11 @@ func (wsHandler *WsHandler) read() {
 			wsHandler.close()
 			return
 		}
+		for _, mid := range wsHandler.Middlewares {
+			if err := mid.AfterRead(&message); err != nil {
+			}
+		}
+
 		wsHandler.MsgReceived <- &message
 	}
 }

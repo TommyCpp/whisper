@@ -59,6 +59,9 @@ func start(server *model.Server) {
 	}
 	fmt.Println("Start processing....")
 	go server.Handle()
+	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+		http.ServeFile(writer, request, "./frontend/client.html")
+	})
 	http.HandleFunc("/register", func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case "GET":
@@ -75,8 +78,34 @@ func start(server *model.Server) {
 			loginHandler(writer, request)
 		}
 	})
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/message", handler)
+	http.HandleFunc("/config", func(writer http.ResponseWriter, request *http.Request) {
+		if request.Header.Get("WhisperConfig") != "" {
+			//if it is a config request
+			id := request.Header.Get("HandlerId")
+			if id != "" {
+				if handlerConfig, err := GetHandlerConfig(request); err != nil {
+					log.Print("Error when process the config request")
+					log.Print(err)
+				} else {
+					server.ConfigHandler <- &model.IdAndHandlerConfig{
+						Id:     id,
+						Config: handlerConfig,
+					}
+				}
+			}
+		}
+	})
 	http.ListenAndServe("localhost:8086", nil)
+}
+
+func GetHandlerConfig(request *http.Request) (*model.HandlerConfig, error) {
+	var handlerConfig = new(model.HandlerConfig)
+	if err := json.NewDecoder(request.Body).Decode(handlerConfig); err != nil {
+		return nil, err
+	} else {
+		return handlerConfig, nil
+	}
 }
 
 func handler(res http.ResponseWriter, req *http.Request) {

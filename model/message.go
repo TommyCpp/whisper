@@ -1,10 +1,7 @@
 package model
 
-import (
-)
-
 type Message struct {
-	Content     string      `json:"content"`
+	Content     string   `json:"content"`
 	SenderId    string   `json:"sender"`
 	ReceiverIds []string `json:"receiver"`
 }
