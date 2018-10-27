@@ -30,7 +30,11 @@ func (a *Account) CheckIfValid(db *sqlconnection.SqlConnection) (bool, error) {
 		return false, err
 	}
 	if res.Next() {
-		return true, nil
+		if err := res.Scan(&a.Id, &a.Username, &a.Password); err != nil {
+			return false, err
+		} else {
+			return true, nil
+		}
 	} else {
 		return false, nil
 	}

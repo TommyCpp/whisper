@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
+	"github.com/gorilla/securecookie"
 	"github.com/gorilla/websocket"
 	"github.com/tommycpp/Whisper/config"
 	"github.com/tommycpp/Whisper/model"
@@ -13,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync/atomic"
 )
@@ -27,6 +29,9 @@ var server = model.Server{
 var configuration = config.NewConfiguration()
 var db *sqlconnection.SqlConnection
 var userIndex uint32
+var cookieHandler = securecookie.New(
+	securecookie.GenerateRandomKey(64),
+	securecookie.GenerateRandomKey(32))
 
 func main() {
 	start(&server)
@@ -109,13 +114,28 @@ func GetHandlerConfig(request *http.Request) (*model.HandlerConfig, error) {
 }
 
 func handler(res http.ResponseWriter, req *http.Request) {
+	cookie := make(map[string]string)
+	rawCookie, err := req.Cookie("cookie")
+	if err != nil {
+		log.Println("Cannot get Cookie")
+		return
+	}
+	if err := cookieHandler.Decode("cookie", rawCookie.Value, &cookie); err != nil {
+		log.Println("Cannot parse cookie")
+	}
+
+	id, err := strconv.Atoi(cookie["id"])
+	if err != nil {
+		log.Println("Cannot get id from cookie")
+		return
+	}
 	conn, err := (&websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}).Upgrade(res, req, nil)
 	if err != nil {
 		http.NotFound(res, req)
 		return
 	}
 	fmt.Println("Open an WebSocket channel")
-	wsHandler := model.NewWsHandler(*conn, *model.NewUser(conn), configuration)
+	wsHandler := model.NewWsHandler(*conn, *model.NewUser(conn, id), configuration)
 	server.CreateHandler <- wsHandler
 }
 
@@ -156,20 +176,32 @@ func loginHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if ifValid, err := account.CheckIfValid(db); err == nil && ifValid {
-		json.NewEncoder(res).Encode(struct {
-			Token []byte `json:"token"`
-		}{generateToken(account.Username)})
+		//if login
+		setCookie(account.Id, res)
 		fmt.Println("User " + account.Username + " has logged in")
+		http.Redirect(res, req, "/", 302)
 	} else {
 		res.WriteHeader(401)
 		res.Write([]byte("Cannot authorized"))
 	}
-
-	return
 }
 
 func generateToken(username string) []byte {
 	hasher := md5.New()
 	hasher.Write([]byte(username))
 	return []byte(hex.EncodeToString(hasher.Sum(nil)))
+}
+
+func setCookie(id int, response http.ResponseWriter) {
+	value := map[string]string{
+		"id": strconv.Itoa(id),
+	}
+	if encoded, err := cookieHandler.Encode("cookie", value); err == nil {
+		cookie := &http.Cookie{
+			Name:  "cookie",
+			Value: encoded,
+			Path:  "/",
+		}
+		http.SetCookie(response, cookie)
+	}
 }

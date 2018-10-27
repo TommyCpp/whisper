@@ -35,8 +35,13 @@
             "username": document.getElementById("username").value,
             "password": document.getElementById("password").value
         };
+        httpRequest.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                location.assign("/")
+            }
+        };
         httpRequest.open("POST", "login");
         httpRequest.send(JSON.stringify(data));
-    }
+    };
 </script>
 </html>

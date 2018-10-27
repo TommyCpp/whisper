@@ -1,11 +1,9 @@
 package model
 
 import (
-	"net"
 	"github.com/gorilla/websocket"
+	"net"
 )
-
-var maxId = 0
 
 type User struct {
 	Id       int    `json:"id"`
@@ -13,10 +11,9 @@ type User struct {
 	Addr     net.Addr
 }
 
-func NewUser(conn *websocket.Conn) *User {
-	maxId += 1
+func NewUser(conn *websocket.Conn, Id int) *User {
 	return &User{
-		maxId,
+		Id,
 		conn.LocalAddr().String(),
 		conn.LocalAddr()}
 }
