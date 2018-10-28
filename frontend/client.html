@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <title>Welcome to golang chat</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
     <style media="screen">
         .messages {
@@ -68,6 +69,7 @@
                         <option value="RSA">RSA Encryption</option>
                     </select>
                 </div>
+                <button type="button" class="btn btn-primary" onclick="config()">Config</button>
 
                 <button type="submit" class="btn btn-primary" onclick="send()">Send</button>
                 <button type="button" class="btn btn-primary" onclick="closeConn()">Close</button>
@@ -126,7 +128,28 @@
         message.value = "";
     }
 
-    function closeConn(){
+    function config() {
+        const xmlrequest = new XMLHttpRequest();
+        const value = document.getElementById("encryption-config").value();
+        const config = {
+            "op": "ADD",
+            "middleware": ""
+        };
+        if ("NO" === value) {
+            return
+        }
+        else{
+            switch (value) {
+                case "RSA": {
+                    config["middleware"] = "RSA";break;
+                }
+            }
+        }
+
+        xmlrequest.send(JSON.stringify(config));
+    }
+
+    function closeConn() {
         socket.close(1000);
         connectionStatus.innerHTML = "Status: Not Connected\n";
     }

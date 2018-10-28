@@ -65,6 +65,18 @@ func start(server *model.Server) {
 	fmt.Println("Start processing....")
 	go server.Handle()
 	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+		cookie := make(map[string]string)
+		rawCookie, err := request.Cookie("cookie")
+		if err != nil {
+			log.Println("User does not login")
+			http.Redirect(writer, request, "/login", 302)
+			return
+		}
+		if err := cookieHandler.Decode("cookie", rawCookie.Value, &cookie); err != nil {
+			log.Println("User does not login")
+			http.Redirect(writer, request, "/login", 302)
+			return
+		}
 		http.ServeFile(writer, request, "./frontend/client.html")
 	})
 	http.HandleFunc("/register", func(writer http.ResponseWriter, request *http.Request) {
