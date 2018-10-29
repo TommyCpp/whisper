@@ -8,6 +8,10 @@ type E2eEncryptionMiddleware struct {
 	EncryptionMiddleware
 }
 
+type RSAEncryptionMiddleware struct {
+	EncryptionMiddleware
+}
+
 func (encryption *EncryptionMiddleware) AfterRead(msg *Message) error {
 	msg.Content = string(encryption.Cipher.Decrypt([]byte(msg.Content)))
 	return nil
@@ -21,5 +25,13 @@ func (encryption *EncryptionMiddleware) BeforeWrite(msg *Message) error {
 func NewEncryptionMiddleware(cipher Cipher) *EncryptionMiddleware {
 	return &EncryptionMiddleware{
 		Cipher: cipher,
+	}
+}
+
+func NewRSAEncryptionMiddleware(cipher *RSACipher) *RSAEncryptionMiddleware {
+	return &RSAEncryptionMiddleware{
+		EncryptionMiddleware: EncryptionMiddleware{
+			Cipher: cipher,
+		},
 	}
 }

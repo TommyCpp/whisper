@@ -26,7 +26,7 @@ func TestAccount_StoreIntoDB(t *testing.T) {
 	account.Username = "test"
 	account.Id = 1
 	account.Password = "1234"
-	res := account.StoreIntoDB(connection)
+	res, _ := account.StoreIntoDB(connection)
 	rowAffected, _ := res.RowsAffected()
 	assert.EqualValues(t, 1, rowAffected)
 }
@@ -41,5 +41,6 @@ func TestAccount_CheckIfValid(t *testing.T) {
 	account.Password = "1234"
 	account.StoreIntoDB(connection)
 
-	assert.True(t, account.CheckIfValid(connection))
+	res, _ := account.CheckIfValid(connection)
+	assert.True(t, res)
 }

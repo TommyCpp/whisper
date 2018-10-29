@@ -118,7 +118,16 @@ func start(server *model.Server) {
 
 func GetHandlerConfig(request *http.Request) (*model.HandlerConfig, error) {
 	var handlerConfig = new(model.HandlerConfig)
-	if err := json.NewDecoder(request.Body).Decode(handlerConfig); err != nil {
+	var handlerConfigString = new(struct {
+		Op             string `json:"op"`
+		MiddlewareName string `json:"middleware_name"`
+	})
+	if err := json.NewDecoder(request.Body).Decode(handlerConfigString); err != nil {
+		handlerConfig.Op = handlerConfigString.Op
+		switch handlerConfigString.MiddlewareName {
+		case "RSA":
+			//todo:
+		}
 		return nil, err
 	} else {
 		return handlerConfig, nil
