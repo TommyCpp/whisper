@@ -119,14 +119,26 @@ func start(server *model.Server) {
 func GetHandlerConfig(request *http.Request) (*model.HandlerConfig, error) {
 	var handlerConfig = new(model.HandlerConfig)
 	var handlerConfigString = new(struct {
-		Op             string `json:"op"`
-		MiddlewareName string `json:"middleware_name"`
+		Op             string                      `json:"op"`
+		MiddlewareName string                      `json:"middleware_name"`
+		Settings       map[string]*json.RawMessage `json:"setting"`
 	})
 	if err := json.NewDecoder(request.Body).Decode(handlerConfigString); err != nil {
 		handlerConfig.Op = handlerConfigString.Op
 		switch handlerConfigString.MiddlewareName {
 		case "RSA":
-			//todo:
+			{
+				// Add a RSA Middleware
+				var publicKey string
+				err = json.Unmarshal(*handlerConfigString.Settings["public_key"], &publicKey)
+				if err != nil {
+					log.Println("Do not have public_key")
+				} else {
+					handlerConfig.MiddleWare = model.NewRSAEncryptionMiddleware(model.NewRSACipher([]byte(publicKey)))
+					return handlerConfig, nil
+				}
+			}
+
 		}
 		return nil, err
 	} else {

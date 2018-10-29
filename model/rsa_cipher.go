@@ -44,14 +44,10 @@ func NewRSACipher(publicKeyFromClient []byte) *RSACipher {
 	if block == nil || block.Type != "PUBLIC KEY" {
 		log.Fatal("failed to decode PEM block containing public key")
 	}
-	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	var rsaPublicKey *rsa.PublicKey
+	rsaPublicKey, err := x509.ParsePKCS1PublicKey(block.Bytes)
 	if err != nil {
 		log.Fatal(err)
-	}
-	var rsaPublicKey *rsa.PublicKey
-	rsaPublicKey, right := pub.(*rsa.PublicKey)
-	if !right {
-		log.Fatal("Not RSA public key")
 	}
 	return &RSACipher{
 		KeyPair:             generateKeys(),
