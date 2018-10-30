@@ -81,7 +81,7 @@
 </div>
 
 </body>
-<script language="JavaScript" type="text/javascript" src="./keypair.min.js"></script>
+<script language="JavaScript" type="text/javascript" src="./static/keypair.min.js"></script>
 <script>
     var rsaKey = null;
     var message = document.getElementById("userMessage");
@@ -131,7 +131,7 @@
     }
 
     function config() {
-
+        const handler_id = document.getElementById("userName").value;
         const xmlrequest = new XMLHttpRequest();
         const select = document.getElementById("encryption-config");
         const value = select.options[select.selectedIndex].value;
@@ -152,17 +152,14 @@
                         "public_key": rsaKey["public"]
                     };
                     console.log(config["setting"]["public_key"]);
+                    xmlrequest.open("POST", "config");
+                    xmlrequest.setRequestHeader("Whisper-Config", "1");
+                    xmlrequest.setRequestHeader("Handler-Id", handler_id);
+                    xmlrequest.send(JSON.stringify(config));
                     break;
                 }
             }
         }
-
-        xmlrequest.send(JSON.stringify(config));
-    }
-
-    function createRSAKey() {
-
-
     }
 
     function closeConn() {

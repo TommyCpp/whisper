@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/tommycpp/Whisper/config"
+	"log"
 )
 
 /*
@@ -101,6 +102,11 @@ func (wsHandler *WsHandler) handle() {
 				case "ADD":
 					{
 						wsHandler.addMiddleware(handlerConfig.MiddleWare)
+						break
+					}
+				default:
+					{
+						log.Fatal("Error Op")
 					}
 				}
 			}

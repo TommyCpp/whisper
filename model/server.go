@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 )
 
@@ -11,6 +12,16 @@ type Server struct {
 	ConfigHandler       chan *IdAndHandlerConfig
 	CreateHandler       chan *WsHandler
 	CloseHandler        chan *WsHandler
+}
+
+func NewServer() *Server {
+	return &Server{
+		UserHandlerMap:      make(map[string]*WsHandler),
+		QueryRedirectTarget: make(chan HandlerQuery),
+		CreateHandler:       make(chan *WsHandler),
+		CloseHandler:        make(chan *WsHandler),
+		ConfigHandler:       make(chan *IdAndHandlerConfig),
+	}
 }
 
 func (server *Server) Handle() {
@@ -51,6 +62,8 @@ func (server *Server) Handle() {
 				config := idAndConfig.Config
 				if handler, ok := server.UserHandlerMap[id]; ok {
 					handler.ConfigHandler <- config
+				} else {
+					log.Fatal("Error try to find User")
 				}
 
 			}

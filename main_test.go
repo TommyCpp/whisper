@@ -1,10 +1,15 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"github.com/tommycpp/Whisper/model"
 	"log"
+	"os"
 	"strings"
 	"testing"
 )
@@ -49,4 +54,24 @@ func TestGetHandlerConfig(t *testing.T) {
 		}
 	}
 
+}
+
+func TestPassPublicKey(t *testing.T) {
+	reader := rand.Reader
+	bitSize := 1024
+
+	key, err := rsa.GenerateKey(reader, bitSize)
+	if err != nil {
+		panic("Error when generate key")
+	}
+	publicKey := &key.PublicKey
+	derPkix := x509.MarshalPKCS1PublicKey(publicKey)
+	block := &pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: derPkix,
+	}
+	err = pem.Encode(os.Stdout, block)
+	if err != nil {
+		log.Println("Error when encode pem")
+	}
 }

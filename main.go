@@ -2,8 +2,10 @@ package main
 
 import (
 	"crypto/md5"
+	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/securecookie"
@@ -13,18 +15,12 @@ import (
 	"github.com/tommycpp/Whisper/sqlconnection"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"sync/atomic"
 )
 
-var server = model.Server{
-	UserHandlerMap:      make(map[string]*model.WsHandler),
-	QueryRedirectTarget: make(chan model.HandlerQuery),
-	CreateHandler:       make(chan *model.WsHandler),
-	CloseHandler:        make(chan *model.WsHandler),
-}
+var server = *model.NewServer()
 
 var configuration = config.NewConfiguration()
 var db *sqlconnection.SqlConnection
@@ -41,7 +37,6 @@ func start(server *model.Server) {
 	if err := config.ReadConfig("./config/config.json", configuration); err != nil {
 		log.Fatal("Cannot read config file")
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	db = sqlconnection.GetSqlConnection(configuration) //get database connection
 	//get next user id
@@ -77,12 +72,14 @@ func start(server *model.Server) {
 			http.Redirect(writer, request, "/login", 302)
 			return
 		}
-		http.ServeFile(writer, request, "./frontend/client.html")
+		http.ServeFile(writer, request, "./static/client.html")
 	})
+	fs := http.FileServer(http.Dir("static/"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	http.HandleFunc("/register", func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case "GET":
-			http.ServeFile(writer, request, "./frontend/register.html")
+			http.ServeFile(writer, request, "./static/register.html")
 		case "POST":
 			registerHandler(writer, request)
 		}
@@ -90,27 +87,40 @@ func start(server *model.Server) {
 	http.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case "GET":
-			http.ServeFile(writer, request, "./frontend/login.html")
+			http.ServeFile(writer, request, "./static/login.html")
 		case "POST":
 			loginHandler(writer, request)
 		}
 	})
 	http.HandleFunc("/message", handler)
 	http.HandleFunc("/config", func(writer http.ResponseWriter, request *http.Request) {
-		if request.Header.Get("WhisperConfig") != "" {
+		if request.Header.Get("Whisper-Config") != "" {
 			//if it is a config request
-			id := request.Header.Get("HandlerId")
+			id := request.Header.Get("Handler-Id")
 			if id != "" {
-				if handlerConfig, err := GetHandlerConfig(request); err != nil {
+				handlerConfig, err := GetHandlerConfig(request)
+				if err != nil {
 					log.Print("Error when process the config request")
 					log.Print(err)
 				} else {
-					server.ConfigHandler <- &model.IdAndHandlerConfig{
+					idAndConfig := &model.IdAndHandlerConfig{
 						Id:     id,
 						Config: handlerConfig,
 					}
+					server.ConfigHandler <- idAndConfig
+					publicKey := handlerConfig.MiddleWare.(*model.RSAEncryptionMiddleware).Cipher.(*model.RSACipher).KeyPair.PublicKey
+					derPkix := x509.MarshalPKCS1PublicKey(publicKey)
+					block := &pem.Block{
+						Type:  "PUBLIC KEY",
+						Bytes: derPkix,
+					}
+					err = pem.Encode(writer, block)
+					if err != nil {
+						log.Println("Error when encode pem")
+					}
 				}
 			}
+			//send
 		}
 	})
 	http.ListenAndServe("localhost:8086", nil)
@@ -123,7 +133,7 @@ func GetHandlerConfig(request *http.Request) (*model.HandlerConfig, error) {
 		MiddlewareName string                      `json:"middleware_name"`
 		Settings       map[string]*json.RawMessage `json:"setting"`
 	})
-	if err := json.NewDecoder(request.Body).Decode(handlerConfigString); err != nil {
+	if err := json.NewDecoder(request.Body).Decode(handlerConfigString); err == nil {
 		handlerConfig.Op = handlerConfigString.Op
 		switch handlerConfigString.MiddlewareName {
 		case "RSA":
@@ -138,12 +148,11 @@ func GetHandlerConfig(request *http.Request) (*model.HandlerConfig, error) {
 					return handlerConfig, nil
 				}
 			}
-
 		}
-		return nil, err
 	} else {
-		return handlerConfig, nil
+		return nil, err
 	}
+	return nil, nil
 }
 
 func handler(res http.ResponseWriter, req *http.Request) {
