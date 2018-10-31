@@ -82,8 +82,18 @@
 
 </body>
 <script language="JavaScript" type="text/javascript" src="./static/keypair.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js"></script>
 <script>
+    //setting forge
+    forge.options.usePureJavaScript = true;
+</script>
+<script>
+    //RSA
     var rsaKey = null;
+    var publicKeyFromServer = null;
+    var pki = forge.pki;
+
+
     var message = document.getElementById("userMessage");
     var userName = document.getElementById("userName");
     var receiverIds = document.getElementById("receivers");
@@ -123,11 +133,29 @@
         }
         const messageDetails = {
             sender: userName.value,
-            content: message.value,
+            content: encryptMessage(message.value),
             receiver: receiverIds.value.split(",")
         };
         socket.send(JSON.stringify(messageDetails));
         message.value = "";
+    }
+
+    // function test(){
+    //     var msg = "This is a test function";
+    //     var keys = keypair();
+    //     var pub = pki.publicKeyFromPem(keys["public"]);
+    //     var pri = pki.privateKeyFromPem(keys["private"]);
+    //     console.log(pri.decrypt(pub.encrypt(msg)));
+    // }
+
+    function encryptMessage(message){
+        if(publicKeyFromServer != null){
+            //if we are using RSA method
+            return forge.util.encode64(publicKeyFromServer.encrypt(message,"RSAES-PKCS1-V1_5"));
+        }
+        else{
+            return message;
+        }
     }
 
     function config() {
@@ -156,6 +184,15 @@
                     xmlrequest.setRequestHeader("Whisper-Config", "1");
                     xmlrequest.setRequestHeader("Handler-Id", handler_id);
                     xmlrequest.send(JSON.stringify(config));
+                    xmlrequest.onreadystatechange = function () {
+                        if(xmlrequest.readyState === 4 && xmlrequest.status >= 200 && xmlrequest.status < 300){
+                            //if success
+                            var publicKeyPem = xmlrequest.responseText;
+                            publicKeyFromServer = pki.publicKeyFromPem(publicKeyPem); //get Public Key from Server;
+                            rsaKey["public"] = pki.publicKeyFromPem(rsaKey["public"]);
+                            rsaKey["private"] = pki.decryptRsaPrivateKey(rsaKey["private"])
+                        }
+                    };
                     break;
                 }
             }

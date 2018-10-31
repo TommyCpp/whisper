@@ -43,7 +43,7 @@ func NewWsHandler(conn websocket.Conn, client User, configuration *config.Config
 		make(chan QueryResult),
 		make(chan struct{}),
 		nil,
-		make([]Middleware, configuration.MiddlewareSize),
+		make([]Middleware, 0, configuration.MiddlewareSize),
 		make(chan *HandlerConfig),
 	}
 }
@@ -83,7 +83,7 @@ func (wsHandler *WsHandler) handle() {
 				wsHandler.Server.QueryRedirectTarget <- HandlerQuery{
 					receiverIds, wsHandler, msgReceived,
 				}
-				//传入Server的QueryRedirectTarget channel
+				//Pass the message to Server's QueryRedirectTarget channel
 			}
 		case queryResult := <-wsHandler.Redirect: //转发消息
 			{
@@ -124,8 +124,11 @@ func (wsHandler *WsHandler) read() {
 			wsHandler.close()
 			return
 		}
+		//fixme: delete following line
+		fmt.Println(message.SenderId + " says: " + message.Content)
 		for _, mid := range wsHandler.Middlewares {
 			if err := mid.AfterRead(&message); err != nil {
+				log.Println(err)
 			}
 		}
 

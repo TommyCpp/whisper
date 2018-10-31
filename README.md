@@ -8,7 +8,7 @@ Whisper is a chat server based on `WebSocket`.
 * Multi-thread implemented by `goroutine`
 * Encryption with RSA algorithm
 * Support custom Middleware.
-* United test included
+* Unit test included
 
 
 
