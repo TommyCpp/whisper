@@ -115,7 +115,7 @@
         messageSpanNode.setAttribute("class", "col col-md-8");
         divNode.setAttribute("class", "row");
         var userTextnode = document.createTextNode(messageDetails["Sender"] + " : ");
-        var messageTextnode = document.createTextNode(messageDetails["Content"] + "\n");
+        var messageTextnode = document.createTextNode(decryptMessage(messageDetails["Content"]) + "\n");
         if (userName.value === "") {
             userName.value = messageDetails["Content"].replace("Your Id is ", "")
         }
@@ -140,20 +140,22 @@
         message.value = "";
     }
 
-    // function test(){
-    //     var msg = "This is a test function";
-    //     var keys = keypair();
-    //     var pub = pki.publicKeyFromPem(keys["public"]);
-    //     var pri = pki.privateKeyFromPem(keys["private"]);
-    //     console.log(pri.decrypt(pub.encrypt(msg)));
-    // }
+    function decryptMessage(message) {
+        if (rsaKey != null) {
+            return rsaKey.private.decrypt(forge.util.decode64(message), "RSAES-PKCS1-V1_5");
 
-    function encryptMessage(message){
-        if(publicKeyFromServer != null){
-            //if we are using RSA method
-            return forge.util.encode64(publicKeyFromServer.encrypt(message,"RSAES-PKCS1-V1_5"));
         }
-        else{
+        else {
+            return message;
+        }
+    }
+
+    function encryptMessage(message) {
+        if (publicKeyFromServer != null) {
+            //if we are using RSA method
+            return forge.util.encode64(publicKeyFromServer.encrypt(message, "RSAES-PKCS1-V1_5"));
+        }
+        else {
             return message;
         }
     }
@@ -185,7 +187,7 @@
                     xmlrequest.setRequestHeader("Handler-Id", handler_id);
                     xmlrequest.send(JSON.stringify(config));
                     xmlrequest.onreadystatechange = function () {
-                        if(xmlrequest.readyState === 4 && xmlrequest.status >= 200 && xmlrequest.status < 300){
+                        if (xmlrequest.readyState === 4 && xmlrequest.status >= 200 && xmlrequest.status < 300) {
                             //if success
                             var publicKeyPem = xmlrequest.responseText;
                             publicKeyFromServer = pki.publicKeyFromPem(publicKeyPem); //get Public Key from Server;

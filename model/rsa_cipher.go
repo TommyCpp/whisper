@@ -22,7 +22,8 @@ func (cipher *RSACipher) getPublicKeyFromClient() *rsa.PublicKey {
 }
 
 func (cipher *RSACipher) Encrypt(str []byte) []byte {
-	res, err := rsa.EncryptPKCS1v15(nil, cipher.PublicKeyFromClient, str)
+	//Encrypt with user's public key
+	res, err := rsa.EncryptPKCS1v15(rand.Reader, cipher.PublicKeyFromClient, str)
 	if err != nil {
 		panic("Error when Encrypt")
 	} else {

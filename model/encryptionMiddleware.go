@@ -26,8 +26,8 @@ func (encryption *EncryptionMiddleware) AfterRead(msg *Message) error {
 }
 
 func (encryption *EncryptionMiddleware) BeforeWrite(msg *Message) error {
-	//todo: send message back to client
-	msg.Content = string(encryption.Cipher.Decrypt([]byte(msg.Content)))
+	msg.Content = string(encryption.Cipher.Encrypt([]byte(msg.Content)))
+	msg.Content = base64.StdEncoding.EncodeToString([]byte(msg.Content))
 	return nil
 }
 

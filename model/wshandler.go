@@ -52,13 +52,13 @@ func (wsHandler *WsHandler) addMiddleware(middleware Middleware) {
 	wsHandler.Middlewares = append(wsHandler.Middlewares, middleware) //fixme: not thread safe
 }
 
-func (wsHandler *WsHandler) sendMsg(msg *Message) {
-	//process by middle
+func (wsHandler *WsHandler) sendMsg(msg *Message) *Message {
+	//process by middleware
 	for _, mid := range wsHandler.Middlewares {
 		if err := mid.BeforeWrite(msg); err != nil {
 		}
 	}
-	wsHandler.MsgToSend <- msg
+	return msg
 }
 
 func (wsHandler *WsHandler) redirectMsg(handlerChan chan *Message, message *Message) {
@@ -71,6 +71,7 @@ func (wsHandler *WsHandler) handle() {
 		select {
 		case msgToSend := <-wsHandler.MsgToSend:
 			{
+				msgToSend = wsHandler.sendMsg(msgToSend)
 				wsHandler.Conn.WriteJSON(struct {
 					Content string
 					Sender  string
