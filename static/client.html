@@ -66,9 +66,19 @@
                     <select name="encryption-config" id="encryption-config">
                         <option value="NO" selected>NO Encryption</option>
                         <option value="RSA">RSA Encryption</option>
+                        <option value="E2E">End to End Encryption</option>
                     </select>
                 </div>
-                <button type="button" class="btn btn-primary" onclick="config()">Config</button>
+                <div class="form-group row" id="e2e-form" style="display: none;">
+                    <label for="e2e-target">End to End Encryption target</label>
+                    <input type="text" name="e2e-target" id="e2e-target"/>
+                </div>
+                <div class="form-group row">
+
+                    <button type="button" class="btn btn-primary" onclick="config()">Config</button>
+                    <div id="config-status"></div>
+                </div>
+
 
                 <button type="submit" class="btn btn-primary" onclick="send()">Send</button>
                 <button type="button" class="btn btn-primary" onclick="closeConn()">Close</button>
@@ -92,6 +102,9 @@
     var rsaKey = null;
     var publicKeyFromServer = null;
     var pki = forge.pki;
+
+    var e2eKey = null;
+    var publicKeyFromPair = null;
 
 
     var message = document.getElementById("userMessage");
@@ -127,6 +140,11 @@
         document.getElementById("output").appendChild(divNode);
     };
 
+    function closeConn() {
+        socket.close(1000);
+        connectionStatus.innerHTML = "Status: Not Connected\n";
+    }
+
     function send() {
         if (userName.value === "") {
             userName.value = "0"
@@ -142,7 +160,7 @@
 
     function decryptMessage(message) {
         if (rsaKey != null) {
-            return rsaKey.private.decrypt(forge.util.decode64(message), "RSAES-PKCS1-V1_5");
+            return rsaKey.private.decrypt(forge.util.decode64(message), "RSAES-PKCS1-V1_5"); // decrypt using PKCK1 Ver. 1.5
 
         }
         else {
@@ -153,18 +171,26 @@
     function encryptMessage(message) {
         if (publicKeyFromServer != null) {
             //if we are using RSA method
-            return forge.util.encode64(publicKeyFromServer.encrypt(message, "RSAES-PKCS1-V1_5"));
+            return forge.util.encode64(publicKeyFromServer.encrypt(message, "RSAES-PKCS1-V1_5"));   //encrypt using PKCK1 Ver. 1.5
         }
         else {
             return message;
         }
     }
 
+    document.getElementById("encryption-config").onchange = function (event) {
+        if (event.target.value === "E2E") {
+            document.getElementById("e2e-form").setAttribute("style", "display:block"); //show the input of select target
+        } else {
+            document.getElementById("e2e-form").setAttribute("style", "display:none"); //show the input of select target
+        }
+    };
+
     function config() {
         const handler_id = document.getElementById("userName").value;
-        const xmlrequest = new XMLHttpRequest();
         const select = document.getElementById("encryption-config");
         const value = select.options[select.selectedIndex].value;
+        var xmlrequest;
         const config = {
             "op": "ADD",
             "middleware_name": "",
@@ -182,17 +208,37 @@
                         "public_key": rsaKey["public"]
                     };
                     console.log(config["setting"]["public_key"]);
-                    xmlrequest.open("POST", "config");
-                    xmlrequest.setRequestHeader("Whisper-Config", "1");
-                    xmlrequest.setRequestHeader("Handler-Id", handler_id);
-                    xmlrequest.send(JSON.stringify(config));
+                    xmlrequest = sendConfig(handler_id);
                     xmlrequest.onreadystatechange = function () {
                         if (xmlrequest.readyState === 4 && xmlrequest.status >= 200 && xmlrequest.status < 300) {
                             //if success
                             var publicKeyPem = xmlrequest.responseText;
                             publicKeyFromServer = pki.publicKeyFromPem(publicKeyPem); //get Public Key from Server;
                             rsaKey["public"] = pki.publicKeyFromPem(rsaKey["public"]);
-                            rsaKey["private"] = pki.decryptRsaPrivateKey(rsaKey["private"])
+                            rsaKey["private"] = pki.decryptRsaPrivateKey(rsaKey["private"]);
+                            document.getElementById("config-status").textContent = "RSA Encryption has enabled!"
+                        }
+                    };
+                    break;
+                }
+                case "E2E": {
+                    e2eKey = keypair();
+                    var target = document.getElementById("e2e-target").value;
+                    config["middleware_name"] = "E2E";
+                    config["setting"] = {
+                        "public_key": e2eKey["public"],
+                        "target": target
+                    };
+                    console.log(config["setting"]["public_key"]);
+                    xmlrequest = sendConfig(handler_id);
+                    xmlrequest.onreadystatechange = function () {
+                        if (xmlrequest.readyState === 4 && xmlrequest.status >= 200 && xmlrequest.status < 300) {
+                            //if success
+                            var publicKeyPem = xmlrequest.responseText;
+                            publicKeyFromPair = pki.publicKeyFromPem(publicKeyPem); //get Public Key from Server;
+                            e2eKey["public"] = pki.publicKeyFromPem(e2eKey["public"]);
+                            e2eKey["private"] = pki.decryptRsaPrivateKey(e2eKey["private"]);
+                            document.getElementById("config-status").textContent = "End to end Encryption has enabled!"
                         }
                     };
                     break;
@@ -201,9 +247,13 @@
         }
     }
 
-    function closeConn() {
-        socket.close(1000);
-        connectionStatus.innerHTML = "Status: Not Connected\n";
+    function sendConfig(handler_id) {
+        const xmlrequest = new XMLHttpRequest();
+        xmlrequest.open("POST", "config");
+        xmlrequest.setRequestHeader("Whisper-Config", "1");
+        xmlrequest.setRequestHeader("Handler-Id", handler_id);
+        xmlrequest.send(JSON.stringify(config));
+        return xmlrequest;
     }
 
 </script>

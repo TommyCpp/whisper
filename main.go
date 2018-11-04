@@ -147,6 +147,12 @@ func GetHandlerConfig(request *http.Request) (*model.HandlerConfig, error) {
 					handlerConfig.MiddleWare = model.NewRSAEncryptionMiddleware(model.NewRSACipher([]byte(publicKey)))
 					return handlerConfig, nil
 				}
+				break
+			}
+		case "E2E":
+			{
+				//todo:Add a E2E Middleware
+
 			}
 		}
 	} else {
