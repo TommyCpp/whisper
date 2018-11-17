@@ -103,11 +103,16 @@ func (wsHandler *WsHandler) handle() {
 				case "ADD":
 					{
 						if _, isE2e := handlerConfig.MiddleWare.(*E2eEncryptionMiddleware); isE2e {
-							wsHandler.MsgReceived <- &Message{
-								Content:     handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).PublicKey,
-								SenderId:    handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).SenderId,
-								ReceiverIds: []string{handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).TargetId},
+							message := &Message{}
+							message.Content = handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).PublicKey
+							message.SenderId = handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).SenderId
+							message.ReceiverIds = []string{handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).TargetId}
+							wsHandler.Server.QueryRedirectTarget <- HandlerQuery{
+								message.ReceiverIds, wsHandler, message,
 							}
+							/*
+							* Note that we can send the message directly to MsgReceived channel, why?
+							 */
 						} else {
 							wsHandler.addMiddleware(handlerConfig.MiddleWare)
 						}

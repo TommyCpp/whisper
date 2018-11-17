@@ -30,4 +30,6 @@ create table user_group
 		on update cascade on delete cascade
 )
 ;
-
+INSERT INTO whisper.user (id, username, password) VALUES (1, 'testuser', '123456');
+INSERT INTO whisper.user (id, username, password) VALUES (3, '1111', '1111');
+INSERT INTO whisper.user (id, username, password) VALUES (4, '2222', '2222');

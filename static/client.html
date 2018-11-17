@@ -118,6 +118,7 @@
         connectionStatus.innerHTML = "Status: Connected\n";
     };
     socket.onmessage = function (e) {
+        //todo: when receive public key from other client, establish end to end encryption with the other client
         var messageDetails = JSON.parse(e.data);
         console.log(messageDetails);
         var divNode = document.createElement("div");
@@ -208,7 +209,7 @@
                         "public_key": rsaKey["public"]
                     };
                     console.log(config["setting"]["public_key"]);
-                    xmlrequest = sendConfig(handler_id);
+                    xmlrequest = sendConfig(handler_id, config);
                     xmlrequest.onreadystatechange = function () {
                         if (xmlrequest.readyState === 4 && xmlrequest.status >= 200 && xmlrequest.status < 300) {
                             //if success
@@ -230,14 +231,11 @@
                         "target": target
                     };
                     console.log(config["setting"]["public_key"]);
-                    xmlrequest = sendConfig(handler_id);
+                    xmlrequest = sendConfig(handler_id, config);
                     xmlrequest.onreadystatechange = function () {
                         if (xmlrequest.readyState === 4 && xmlrequest.status >= 200 && xmlrequest.status < 300) {
                             //if success
                             var publicKeyPem = xmlrequest.responseText;
-                            publicKeyFromPair = pki.publicKeyFromPem(publicKeyPem); //get Public Key from Server;
-                            e2eKey["public"] = pki.publicKeyFromPem(e2eKey["public"]);
-                            e2eKey["private"] = pki.decryptRsaPrivateKey(e2eKey["private"]);
                             document.getElementById("config-status").textContent = "End to end Encryption has enabled!"
                         }
                     };
@@ -247,7 +245,7 @@
         }
     }
 
-    function sendConfig(handler_id) {
+    function sendConfig(handler_id, config) {
         const xmlrequest = new XMLHttpRequest();
         xmlrequest.open("POST", "config");
         xmlrequest.setRequestHeader("Whisper-Config", "1");
