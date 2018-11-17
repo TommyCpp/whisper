@@ -30,7 +30,7 @@ type HandlerQuery struct {
 }
 
 type QueryResult struct {
-	handlerChans []chan *Message //对应接受方的MsgToSend channel
+	handlerChans []chan *Message // Receivers's MsgToSend channel
 	Msg          *Message
 }
 
@@ -86,11 +86,11 @@ func (wsHandler *WsHandler) handle() {
 				}
 				//Pass the message to Server's QueryRedirectTarget channel
 			}
-		case queryResult := <-wsHandler.Redirect: //转发消息
+		case queryResult := <-wsHandler.Redirect: //Redirect Message
 			{
 				msg := queryResult.Msg
-				for _, handlerChan := range queryResult.handlerChans {
-					go wsHandler.redirectMsg(handlerChan, msg)
+				for _, targetMsgToSendChan := range queryResult.handlerChans {
+					go wsHandler.redirectMsg(targetMsgToSendChan, msg)
 				}
 			}
 		case _ = <-wsHandler.Close:
@@ -104,8 +104,9 @@ func (wsHandler *WsHandler) handle() {
 					{
 						if _, isE2e := handlerConfig.MiddleWare.(*E2eEncryptionMiddleware); isE2e {
 							wsHandler.MsgReceived <- &Message{
-								//Content: string(handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).PublicKey),
-								//todo: send publickey to target
+								Content:     handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).PublicKey,
+								SenderId:    handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).SenderId,
+								ReceiverIds: []string{handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).TargetId},
 							}
 						} else {
 							wsHandler.addMiddleware(handlerConfig.MiddleWare)

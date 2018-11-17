@@ -42,8 +42,9 @@ func NewRSAEncryptionMiddleware(cipher *RSACipher) *RSAEncryptionMiddleware {
 }
 
 type E2eEncryptionMiddleware struct {
-	TargetId  []byte
-	PublicKey []byte
+	TargetId  string
+	PublicKey string
+	SenderId  string
 }
 
 func (e2eEncryptionMiddleware *E2eEncryptionMiddleware) BeforeWrite(msg *Message) error {
@@ -54,9 +55,10 @@ func (e2eEncryptionMiddleware *E2eEncryptionMiddleware) AfterRead(msg *Message) 
 	return nil
 }
 
-func NewE2eEncryptionMiddleware(targetId []byte, publickey []byte) *E2eEncryptionMiddleware {
+func NewE2eEncryptionMiddleware(targetId string, publickey string, senderId string) *E2eEncryptionMiddleware {
 	return &E2eEncryptionMiddleware{
 		TargetId:  targetId,
 		PublicKey: publickey,
+		SenderId:  senderId,
 	}
 }
