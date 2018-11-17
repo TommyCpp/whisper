@@ -98,26 +98,42 @@ func start(server *model.Server) {
 			//if it is a config request
 			id := request.Header.Get("Handler-Id")
 			if id != "" {
-				handlerConfig, err := GetHandlerConfig(request)
+				handlerConfig, middlewareName, err := GetHandlerConfig(request)
 				if err != nil {
 					log.Print("Error when process the config request")
 					log.Print(err)
 				} else {
-					idAndConfig := &model.IdAndHandlerConfig{
-						Id:     id,
-						Config: handlerConfig,
+					switch middlewareName {
+					case "RSA":
+						{
+							idAndConfig := &model.IdAndHandlerConfig{
+								Id:     id,
+								Config: handlerConfig,
+							}
+							server.ConfigHandler <- idAndConfig
+							publicKey := handlerConfig.MiddleWare.(*model.RSAEncryptionMiddleware).Cipher.(*model.RSACipher).KeyPair.PublicKey
+							derPkix := x509.MarshalPKCS1PublicKey(publicKey)
+							block := &pem.Block{
+								Type:  "PUBLIC KEY",
+								Bytes: derPkix,
+							}
+							err = pem.Encode(writer, block)
+							if err != nil {
+								log.Println("Error when encode pem")
+							}
+							break
+						}
+					case "E2E":
+						{
+							idAndConfig := &model.IdAndHandlerConfig{
+								Id:     id,
+								Config: handlerConfig,
+							}
+							server.ConfigHandler <- idAndConfig
+							break
+						}
 					}
-					server.ConfigHandler <- idAndConfig
-					publicKey := handlerConfig.MiddleWare.(*model.RSAEncryptionMiddleware).Cipher.(*model.RSACipher).KeyPair.PublicKey
-					derPkix := x509.MarshalPKCS1PublicKey(publicKey)
-					block := &pem.Block{
-						Type:  "PUBLIC KEY",
-						Bytes: derPkix,
-					}
-					err = pem.Encode(writer, block)
-					if err != nil {
-						log.Println("Error when encode pem")
-					}
+
 				}
 			}
 			//send
@@ -126,7 +142,7 @@ func start(server *model.Server) {
 	http.ListenAndServe("localhost:8086", nil)
 }
 
-func GetHandlerConfig(request *http.Request) (*model.HandlerConfig, error) {
+func GetHandlerConfig(request *http.Request) (*model.HandlerConfig, string, error) {
 	var handlerConfig = new(model.HandlerConfig)
 	var handlerConfigString = new(struct {
 		Op             string                      `json:"op"`
@@ -145,20 +161,32 @@ func GetHandlerConfig(request *http.Request) (*model.HandlerConfig, error) {
 					log.Println("Do not have public_key")
 				} else {
 					handlerConfig.MiddleWare = model.NewRSAEncryptionMiddleware(model.NewRSACipher([]byte(publicKey)))
-					return handlerConfig, nil
+					return handlerConfig, "RSA", nil
 				}
 				break
 			}
 		case "E2E":
 			{
-				//todo:Add a E2E Middleware
-
+				var publicKey string
+				var targetId string
+				err = json.Unmarshal(*handlerConfigString.Settings["public_key"], &publicKey)
+				if err != nil {
+					log.Println("Do not have public_key")
+				} else {
+					err = json.Unmarshal(*handlerConfigString.Settings["target"], &targetId)
+					if err != nil {
+						log.Println("Cannot get target")
+					}
+					handlerConfig.MiddleWare = model.NewE2eEncryptionMiddleware([]byte(targetId), []byte(publicKey))
+					return handlerConfig, "E2E", nil
+				}
+				break
 			}
 		}
 	} else {
-		return nil, err
+		return nil, "", err
 	}
-	return nil, nil
+	return nil, "", nil
 }
 
 func handler(res http.ResponseWriter, req *http.Request) {

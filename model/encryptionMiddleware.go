@@ -6,10 +6,6 @@ type EncryptionMiddleware struct {
 	Cipher Cipher
 }
 
-type E2eEncryptionMiddleware struct {
-	EncryptionMiddleware
-}
-
 type RSAEncryptionMiddleware struct {
 	EncryptionMiddleware
 }
@@ -42,5 +38,25 @@ func NewRSAEncryptionMiddleware(cipher *RSACipher) *RSAEncryptionMiddleware {
 		EncryptionMiddleware: EncryptionMiddleware{
 			Cipher: cipher,
 		},
+	}
+}
+
+type E2eEncryptionMiddleware struct {
+	TargetId  []byte
+	PublicKey []byte
+}
+
+func (e2eEncryptionMiddleware *E2eEncryptionMiddleware) BeforeWrite(msg *Message) error {
+	return nil
+}
+
+func (e2eEncryptionMiddleware *E2eEncryptionMiddleware) AfterRead(msg *Message) error {
+	return nil
+}
+
+func NewE2eEncryptionMiddleware(targetId []byte, publickey []byte) *E2eEncryptionMiddleware {
+	return &E2eEncryptionMiddleware{
+		TargetId:  targetId,
+		PublicKey: publickey,
 	}
 }

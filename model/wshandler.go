@@ -102,7 +102,14 @@ func (wsHandler *WsHandler) handle() {
 				switch handlerConfig.Op {
 				case "ADD":
 					{
-						wsHandler.addMiddleware(handlerConfig.MiddleWare)
+						if _, isE2e := handlerConfig.MiddleWare.(*E2eEncryptionMiddleware); isE2e {
+							wsHandler.MsgReceived <- &Message{
+								//Content: string(handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).PublicKey),
+								//todo: send publickey to target
+							}
+						} else {
+							wsHandler.addMiddleware(handlerConfig.MiddleWare)
+						}
 						break
 					}
 				default:
