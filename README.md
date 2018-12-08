@@ -18,6 +18,8 @@ test data has been included in database.sql
 You may change configuration as you want in `config/config.json`
 
 ## Architecture
+![](https://github.com/TommyCpp/Whisper/blob/master/architecture.png)
+      
 
 ## Todo
 * Use React or other framework to rewrite frontend
