@@ -72,7 +72,7 @@ func (wsHandler *WsHandler) handle() {
 		case msgToSend := <-wsHandler.MsgToSend:
 			{
 				msgToSend = wsHandler.sendMsg(msgToSend)
-				wsHandler.Conn.WriteJSON(struct {
+				_ = wsHandler.Conn.WriteJSON(struct {
 					Content string
 					Sender  string
 				}{(msgToSend).Content, (msgToSend).SenderId})
@@ -104,7 +104,7 @@ func (wsHandler *WsHandler) handle() {
 					{
 						if _, isE2e := handlerConfig.MiddleWare.(*E2eEncryptionMiddleware); isE2e {
 							message := &Message{}
-							message.Content = handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).PublicKey
+							message.Content = "Control-E2eEncryption" + handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).PublicKey
 							message.SenderId = handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).SenderId
 							message.ReceiverIds = []string{handlerConfig.MiddleWare.(*E2eEncryptionMiddleware).TargetId}
 							wsHandler.Server.QueryRedirectTarget <- HandlerQuery{

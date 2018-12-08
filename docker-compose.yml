@@ -1,0 +1,31 @@
+version: "3.3"
+services:
+  app:
+    image: golang:1.8
+    volumes:
+      - ~/code/Go/src/github.com/tommycpp/Whisper
+    working_dir: ~/code/Go/src/github.com/tommycpp/Whisper
+    command: go run main.go
+  #    links:
+  #      - mysql
+
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database.sql:/docker-entrypoint-initdb.d/database.sql
+    container_name: whisper_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: whisper
+      MYSQL_USER: whisperAdmin
+      MYSQL_PASSWORD: whisperAdmin123456
+    ports:
+      - 3306:3306
+
+volumes:
+  db_data:
+
+
+
+

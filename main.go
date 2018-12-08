@@ -160,7 +160,7 @@ func start(server *model.Server) {
 			//send
 		}
 	})
-	http.ListenAndServe("localhost:8086", nil)
+	_ = http.ListenAndServe("localhost:"+strconv.Itoa(configuration.Port), nil)
 }
 
 func GetHandlerConfig(request *http.Request) (*model.HandlerConfigJson, error) {

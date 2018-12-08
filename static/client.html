@@ -66,7 +66,7 @@
                     <select name="encryption-config" id="encryption-config">
                         <option value="NO" selected>NO Encryption</option>
                         <option value="RSA">RSA Encryption</option>
-                        <option value="E2E">End to End Encryption</option>
+                        <option value="E2E" style="display:none">End to End Encryption</option>
                     </select>
                 </div>
                 <div class="form-group row" id="e2e-form" style="display: none;">
@@ -118,7 +118,13 @@
         connectionStatus.innerHTML = "Status: Connected\n";
     };
     socket.onmessage = function (e) {
-        //todo: when receive public key from other client, establish end to end encryption with the other client
+        /**
+         * todo:
+         * 1. rewrite front-end with React or Angular
+         * 2. finish e2e
+         *    e2e encryption requires to store a user map in front-end, thus it is mainly focus on front-end
+         *
+         * */
         var messageDetails = JSON.parse(e.data);
         console.log(messageDetails);
         var divNode = document.createElement("div");
@@ -128,17 +134,26 @@
         userSpanNode.setAttribute("class", "col col-md-4");
         messageSpanNode.setAttribute("class", "col col-md-8");
         divNode.setAttribute("class", "row");
-        var userTextnode = document.createTextNode(messageDetails["Sender"] + " : ");
-        var messageTextnode = document.createTextNode(decryptMessage(messageDetails["Content"]) + "\n");
-        if (userName.value === "") {
-            userName.value = messageDetails["Content"].replace("Your Id is ", "")
+        if (messageDetails["Sender"] === "0") {
+            //if it is system message, control message
+            if (userName.value === "" && messageDetails["Content"].startsWith("Your Id is")) {
+                userName.value = messageDetails["Content"].replace("Your Id is ", "")
+            }
+            if (messageDetails["Content"].startsWith("Control-E2eEncryption")) {
+                publickey = messageDetails["Content"].replace("Control-E2eEncryption", "")
+            }
+        } else {
+            var userTextnode = document.createTextNode(messageDetails["Sender"] + " : ");
+            var messageTextnode = document.createTextNode(decryptMessage(messageDetails["Content"]) + "\n");
+
+            boldNode.appendChild(userTextnode);
+            userSpanNode.appendChild(boldNode);
+            messageSpanNode.appendChild(messageTextnode);
+            divNode.appendChild(userSpanNode);
+            divNode.appendChild(messageSpanNode);
+            document.getElementById("output").appendChild(divNode);
         }
-        boldNode.appendChild(userTextnode);
-        userSpanNode.appendChild(boldNode);
-        messageSpanNode.appendChild(messageTextnode);
-        divNode.appendChild(userSpanNode);
-        divNode.appendChild(messageSpanNode);
-        document.getElementById("output").appendChild(divNode);
+
     };
 
     function closeConn() {
@@ -163,8 +178,7 @@
         if (rsaKey != null) {
             return rsaKey.private.decrypt(forge.util.decode64(message), "RSAES-PKCS1-V1_5"); // decrypt using PKCK1 Ver. 1.5
 
-        }
-        else {
+        } else {
             return message;
         }
     }
@@ -173,8 +187,7 @@
         if (publicKeyFromServer != null) {
             //if we are using RSA method
             return forge.util.encode64(publicKeyFromServer.encrypt(message, "RSAES-PKCS1-V1_5"));   //encrypt using PKCK1 Ver. 1.5
-        }
-        else {
+        } else {
             return message;
         }
     }
@@ -199,8 +212,7 @@
         };
         if ("NO" === value) {
             return
-        }
-        else {
+        } else {
             switch (value) {
                 case "RSA": {
                     rsaKey = keypair();

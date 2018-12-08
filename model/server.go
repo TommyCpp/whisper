@@ -49,7 +49,7 @@ func (server *Server) Handle() {
 			}
 		case handler := <-server.CloseHandler:
 			{
-				handler.Conn.Close()
+				_ = handler.Conn.Close()
 				delete(server.UserHandlerMap, strconv.Itoa(handler.Client.Id))
 				close(handler.MsgToSend)
 				close(handler.MsgReceived)

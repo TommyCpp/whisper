@@ -1,3 +1,4 @@
+use whisper;
 create table `group`
 (
 	id VARCHAR(128) not null
