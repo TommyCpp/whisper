@@ -1,27 +1,29 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import Header from './components/header/Header'
+import {createMuiTheme, withStyles} from '@material-ui/core/styles';
+import {ThemeProvider} from '@material-ui/styles';
+import Bottom from "./components/bottom/Bottom";
+import blue from '@material-ui/core/colors/blue';
+
+const theme = createMuiTheme({
+    palette: {
+        primary: blue
+    }
+});
+
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        OK i will edit it
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    return (
+        <div className="App">
+            <ThemeProvider theme={theme}>
+                <Header/>
+                <Bottom/>
+            </ThemeProvider>
+
+        </div>
+    );
 }
 
 export default App;
