@@ -1,6 +1,6 @@
 {
   "middlewareSize": 7,
-  "port": 8087,
+  "port": 8086,
   "encryptionKey": "ljsidf80P(SDPF(:O9djfdsfj;9JFS;(DfLO*FDsld",
   "Database": {
     "drive": "mysql",

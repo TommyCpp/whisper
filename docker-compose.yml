@@ -9,6 +9,8 @@ services:
       bash -c "go get -u github.com/golang/dep/cmd/dep
       && dep ensure -v && go build -v && ./whisper"
     container_name: whisper
+    networks:
+      - whisper
     links:
       - mysql
 
@@ -23,9 +25,15 @@ services:
       MYSQL_DATABASE: whisper
       MYSQL_USER: whisperAdmin
       MYSQL_PASSWORD: whisperAdmin123456
+    networks:
+      - whisper
     ports:
       - 3306:3306
-
+networks:
+  whisper:
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16
 volumes:
   db_data:
 
