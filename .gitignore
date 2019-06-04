@@ -2,3 +2,5 @@
 /.git
 *.exe
 /.out
+vendor/
+Whisper

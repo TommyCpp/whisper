@@ -1,13 +1,16 @@
 version: "3.3"
 services:
   app:
-    image: golang:1.8
+    image: golang:1.11
     volumes:
-      - ~/code/Go/src/github.com/tommycpp/Whisper
-    working_dir: ~/code/Go/src/github.com/tommycpp/Whisper
-    command: go run main.go
-  #    links:
-  #      - mysql
+      - .:/go/src/whisper
+    working_dir: /go/src/whisper
+    command: >
+      bash -c "go get -u github.com/golang/dep/cmd/dep
+      && dep ensure -v && go build -v && ./whisper"
+    container_name: whisper
+    links:
+      - mysql
 
   mysql:
     image: mysql:5.7
