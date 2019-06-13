@@ -7,6 +7,9 @@ import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import {makeStyles} from '@material-ui/core/styles';
 import Login from "./components/login/Login";
+import {BrowserRouter, Route, Link, Switch} from "react-router-dom";
+import Index from "./components/index/Index";
+
 
 const useStyles = makeStyles(theme => ({
     icon: {
@@ -59,7 +62,12 @@ export default function App() {
                     </AppBar>
                 </Box>
                 <Box>
-                    <Login/>
+                    <BrowserRouter>
+                        <Switch>
+                            <Route path="/" exact component={() => <Index/>}/>
+                            <Route path="/login" exact component={() => <Login/>}/>
+                        </Switch>
+                    </BrowserRouter>
                 </Box>
                 {/* Footer */}
                 <Box>

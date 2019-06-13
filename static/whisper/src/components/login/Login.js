@@ -49,7 +49,7 @@ export default function Login() {
     }, [user]);
 
     const login = () => {
-        doLogin(user, setUser);
+        doLogin(user);
     };
 
 
@@ -74,6 +74,7 @@ export default function Login() {
                         name="email"
                         autoComplete="email"
                         autoFocus
+                        onChange={event => setUser({...user, username: event.target.value || ''})}
                     />
                     <TextField
                         variant="outlined"
@@ -85,6 +86,7 @@ export default function Login() {
                         type="password"
                         id="password"
                         autoComplete="current-password"
+                        onChange={event => setUser({...user, password: event.target.value || ''})}
                     />
                     <FormControlLabel
                         control={<Checkbox value="remember" color="primary"/>}

@@ -10,8 +10,3 @@ export class User {
         return user;
     }
 }
-
-
-
-
-

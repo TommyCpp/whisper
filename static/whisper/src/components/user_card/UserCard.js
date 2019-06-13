@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
-import {User} from "./user";
+import {User} from "../../models/user";
 
-function UserCard() {
+export default function UserCard() {
     const [user, setUser] = useState(User.init());
     useEffect(() => {
         setUser({
@@ -30,5 +30,3 @@ function UserCard() {
         </div>
     )
 }
-
-export default UserCard;
