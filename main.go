@@ -10,6 +10,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/websocket"
+	"github.com/rs/cors"
 	"github.com/tommycpp/Whisper/config"
 	"github.com/tommycpp/Whisper/model"
 	"github.com/tommycpp/Whisper/sqlconnection"
@@ -59,7 +60,8 @@ func start(server *model.Server) {
 	}
 	fmt.Println("Start processing....")
 	go server.Handle()
-	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+	router := http.NewServeMux()
+	router.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		cookie := make(map[string]string)
 		rawCookie, err := request.Cookie("cookie")
 		if err != nil {
@@ -75,8 +77,8 @@ func start(server *model.Server) {
 		http.ServeFile(writer, request, "./static/client.html")
 	})
 	fs := http.FileServer(http.Dir("static/"))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
-	http.HandleFunc("/register", func(writer http.ResponseWriter, request *http.Request) {
+	router.Handle("/static/", http.StripPrefix("/static/", fs))
+	router.HandleFunc("/register", func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case "GET":
 			http.ServeFile(writer, request, "./static/register.html")
@@ -84,7 +86,7 @@ func start(server *model.Server) {
 			registerHandler(writer, request)
 		}
 	})
-	http.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
+	router.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case "GET":
 			http.ServeFile(writer, request, "./static/login.html")
@@ -92,8 +94,8 @@ func start(server *model.Server) {
 			loginHandler(writer, request)
 		}
 	})
-	http.HandleFunc("/message", handler)
-	http.HandleFunc("/config", func(writer http.ResponseWriter, request *http.Request) {
+	router.HandleFunc("/message", handler)
+	router.HandleFunc("/config", func(writer http.ResponseWriter, request *http.Request) {
 		if request.Header.Get("Whisper-Config") != "" {
 			//if it is a config request
 			id := request.Header.Get("Handler-Id")
@@ -160,7 +162,8 @@ func start(server *model.Server) {
 			//send
 		}
 	})
-	_ = http.ListenAndServe("localhost:"+strconv.Itoa(configuration.Port), nil)
+	handler := cors.Default().Handler(router)
+	_ = http.ListenAndServe("localhost:"+strconv.Itoa(configuration.Port), handler)
 }
 
 func GetHandlerConfig(request *http.Request) (*model.HandlerConfigJson, error) {
@@ -238,7 +241,11 @@ func loginHandler(res http.ResponseWriter, req *http.Request) {
 		//if login
 		setCookie(account.Id, res)
 		fmt.Println("User " + account.Username + " has logged in")
-		http.Redirect(res, req, "/", 302)
+		if getContentType(req) == "text/html" {
+			http.Redirect(res, req, "/", 302)
+		} else {
+			res.WriteHeader(200)
+		}
 	} else {
 		res.WriteHeader(401)
 		res.Write([]byte("Cannot authorized"))
@@ -263,4 +270,13 @@ func setCookie(id int, response http.ResponseWriter) {
 		}
 		http.SetCookie(response, cookie)
 	}
+}
+
+func getContentType(req *http.Request) string {
+	if req.Header.Get("Content-Type") == "" {
+		return "text/html"
+	} else {
+		return req.Header.Get("Content-Type")
+	}
+
 }

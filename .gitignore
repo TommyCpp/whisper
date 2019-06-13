@@ -4,3 +4,5 @@
 /.out
 vendor/
 Whisper
+whisper
+static/whisper/
