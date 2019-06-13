@@ -42,6 +42,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:5f47c69f85311c4dc292be6cc995a0a3fe8337a6ce38ef4f71e5b7efd5ad42e0"
+  name = "github.com/rs/cors"
+  packages = ["."]
+  pruneopts = ""
+  revision = "9a47f48565a795472d43519dd49aac781f3034fb"
+  version = "v1.6.0"
+
+[[projects]]
   digest = "1:381bcbeb112a51493d9d998bbba207a529c73dbb49b3fd789e48c63fac1f192c"
   name = "github.com/stretchr/testify"
   packages = ["assert"]
@@ -51,7 +59,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:74524e107caba6e5460b7f9b21c3b667608988ffd8557ff87c922a97feeeddaa"
+  digest = "1:121185b37cb499ee11d32b8ecc55e6bb5d66d6f8d54ef512360a349a07539c2f"
   name = "github.com/tommycpp/Whisper"
   packages = [
     "config",
@@ -59,7 +67,7 @@
     "sqlconnection",
   ]
   pruneopts = ""
-  revision = "4ca0dbbe07912ffb92446b3e9cad8b0ab3ec575c"
+  revision = "1a0af0c82f286b510eb3f4cf67fff20f0cfc473c"
 
 [[projects]]
   digest = "1:01b9b21ce3c29e95c6226188ab77233e59f4e397262a078cd6f248405b86dda7"
@@ -76,6 +84,7 @@
     "github.com/go-sql-driver/mysql",
     "github.com/gorilla/securecookie",
     "github.com/gorilla/websocket",
+    "github.com/rs/cors",
     "github.com/stretchr/testify/assert",
     "github.com/tommycpp/Whisper/config",
     "github.com/tommycpp/Whisper/model",
