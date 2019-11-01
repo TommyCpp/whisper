@@ -1,14 +1,10 @@
 version: "3"
 services:
   app:
-    image: golang:1.11
-    volumes:
-      - .:/go/src/whisper
-      - ./config/deploy_config.json:/go/src/whisper/config/config.json # change config
-    working_dir: /go/src/whisper
-    command: >
-      bash -c "go get -u github.com/golang/dep/cmd/dep
-      && dep ensure -v && go build -v"
+    image: whisper:backend
+    build:
+      context: ./
+      dockerfile: Dockerfile
     container_name: whisper
     networks:
       - whisper
