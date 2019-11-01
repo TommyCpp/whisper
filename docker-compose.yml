@@ -1,14 +1,14 @@
-version: "3.3"
+version: "3"
 services:
   app:
-    image: golang:1.11
-    volumes:
-      - .:/go/src/whisper
-    working_dir: /go/src/whisper
-    command: >
-      bash -c "go get -u github.com/golang/dep/cmd/dep
-      && dep ensure -v && go build -v && ./whisper"
+    image: whisper:backend
+    build:
+      context: ./
+      dockerfile: Dockerfile
     container_name: whisper
+    networks:
+      whisper:
+        ipv4_address: 172.29.1.2
     links:
       - mysql
 
@@ -23,9 +23,16 @@ services:
       MYSQL_DATABASE: whisper
       MYSQL_USER: whisperAdmin
       MYSQL_PASSWORD: whisperAdmin123456
+    networks:
+      whisper:
+        ipv4_address: 172.29.1.1
     ports:
       - 3306:3306
-
+networks:
+  whisper:
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16
 volumes:
   db_data:
 

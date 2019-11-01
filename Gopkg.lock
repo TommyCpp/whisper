@@ -32,6 +32,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/rs/cors"
+  packages = ["."]
+  revision = "9a47f48565a795472d43519dd49aac781f3034fb"
+  version = "v1.6.0"
+
+[[projects]]
   name = "github.com/stretchr/testify"
   packages = ["assert"]
   revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
@@ -46,6 +52,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6406e5069acfbbae647e6e76ed606b51a1b06d44a8e941cda693bfd8ec5a8205"
+  inputs-digest = "dc063bd9017f44596b5915edaa136dd68a43ca43a6a3d2c45a1a56215d269b3b"
   solver-name = "gps-cdcl"
   solver-version = 1
