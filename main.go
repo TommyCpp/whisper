@@ -163,7 +163,7 @@ func start(server *model.Server) {
 		}
 	})
 	handler := cors.Default().Handler(router)
-	_ = http.ListenAndServe("localhost:"+strconv.Itoa(configuration.Port), handler)
+	_ = http.ListenAndServe("0.0.0.0:"+strconv.Itoa(configuration.Port), handler)
 }
 
 func GetHandlerConfig(request *http.Request) (*model.HandlerConfigJson, error) {

@@ -8,5 +8,7 @@ WORKDIR /go/src/whisper
 RUN go get -u github.com/golang/dep/...
 RUN dep ensure
 
+EXPOSE 8086
+
 RUN go build -o /app .
 CMD ["/app"]
