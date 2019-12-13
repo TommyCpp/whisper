@@ -261,7 +261,7 @@
         const xmlrequest = new XMLHttpRequest();
         xmlrequest.open("POST", "config");
         xmlrequest.setRequestHeader("Ecp-Config", "1");
-        xmlrequest.setRequestHeader("Handler-Id", handler_id);
+        xmlrequest.setRequestHeader("User-Id", handler_id);
         xmlrequest.send(JSON.stringify(config));
         return xmlrequest;
     }

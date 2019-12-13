@@ -98,7 +98,7 @@ func start(server *model.Server) {
 	router.HandleFunc("/config", func(writer http.ResponseWriter, request *http.Request) {
 		if request.Header.Get("Ecp-Config") != "" {
 			//if it is a config request
-			id := request.Header.Get("Handler-Id")
+			id := request.Header.Get("User-Id")
 			if id != "" {
 				handlerConfigString, err := GetHandlerConfig(request)
 				if err != nil {
