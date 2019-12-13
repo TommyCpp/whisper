@@ -96,7 +96,7 @@ func start(server *model.Server) {
 	})
 	router.HandleFunc("/message", handler)
 	router.HandleFunc("/config", func(writer http.ResponseWriter, request *http.Request) {
-		if request.Header.Get("Whisper-Config") != "" {
+		if request.Header.Get("Ecp-Config") != "" {
 			//if it is a config request
 			id := request.Header.Get("Handler-Id")
 			if id != "" {

@@ -260,7 +260,7 @@
     function sendConfig(handler_id, config) {
         const xmlrequest = new XMLHttpRequest();
         xmlrequest.open("POST", "config");
-        xmlrequest.setRequestHeader("Whisper-Config", "1");
+        xmlrequest.setRequestHeader("Ecp-Config", "1");
         xmlrequest.setRequestHeader("Handler-Id", handler_id);
         xmlrequest.send(JSON.stringify(config));
         return xmlrequest;
